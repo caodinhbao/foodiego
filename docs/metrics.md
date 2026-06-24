@@ -2,6 +2,8 @@
 
 > Tài liệu theo dõi các chỉ số chất lượng quy trình của FoodieGo theo mục tiêu LEAN + Lead Time.  
 > Cập nhật sau mỗi sprint.
+| PR #1 | feature/setup-express-ci | ~22:43 | ~22:55 | ~12 phút | Bảo
+
 
 ---
 
