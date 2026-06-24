@@ -1,0 +1,88 @@
+name: FoodieGo CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ── Lint + Test (Node.js Backend) ──────────────────────────────────────────
+  backend:
+    name: Backend — Lint & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: foodiego
+          POSTGRES_PASSWORD: foodiego123
+          POSTGRES_DB: foodiego_db_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: backend
+        run: npm run lint
+
+      - name: Run tests with coverage
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://foodiego:foodiego123@localhost:5432/foodiego_db_test
+          JWT_SECRET: test_secret_ci
+          JWT_EXPIRES_IN: 1h
+          DELIVERY_SERVICE_URL: http://localhost:8000
+          NODE_ENV: test
+        run: npm run test:coverage
+
+      - name: Upload coverage to SonarQube
+        # TODO (Thành viên A - Ngày 3): thêm SonarQube token vào GitHub Secrets
+        # uses: SonarSource/sonarcloud-github-action@master
+        # env:
+        #   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # with:
+        #   projectBaseDir: backend
+        run: echo "SonarQube step — configure after adding SONAR_TOKEN secret"
+
+  # ── Test (Python Delivery Service) ────────────────────────────────────────
+  delivery-service:
+    name: Delivery Service — Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: delivery-service
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: delivery-service
+        run: pytest test_main.py -v

@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: foodiego_db
+    environment:
+      POSTGRES_USER: foodiego
+      POSTGRES_PASSWORD: foodiego123
+      POSTGRES_DB: foodiego_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U foodiego -d foodiego_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend (Node.js + Express) ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: foodiego_backend
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://foodiego:foodiego123@postgres:5432/foodiego_db
+      JWT_SECRET: super_secret_change_in_prod
+      JWT_EXPIRES_IN: 7d
+      DELIVERY_SERVICE_URL: http://delivery-service:8000
+      NODE_ENV: production
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── Delivery Fee Service (Python FastAPI) ──────────────────────────────────
+  delivery-service:
+    build:
+      context: ./delivery-service
+      dockerfile: Dockerfile
+    container_name: foodiego_delivery
+    ports:
+      - '8000:8000'
+    restart: on-failure
+
+volumes:
+  postgres_data:
