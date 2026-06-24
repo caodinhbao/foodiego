@@ -1,8 +1,8 @@
-const db = require('../../config/db');
-const axios = require('axios');
+const _db = require('../../config/db');
+const _axios = require('axios');
 
 // Trạng thái hợp lệ và các chuyển trạng thái được phép
-const VALID_STATUS = ['pending', 'accepted', 'preparing', 'delivering', 'completed', 'cancelled'];
+const _VALID_STATUS = ['pending', 'accepted', 'preparing', 'delivering', 'completed', 'cancelled'];
 const STATUS_TRANSITIONS = {
   pending: ['accepted', 'cancelled'],
   accepted: ['preparing', 'cancelled'],
@@ -26,7 +26,7 @@ const STATUS_TRANSITIONS = {
  *  5. INSERT orders + INSERT order_items (dùng transaction)
  *  6. Trả về order với danh sách items
  */
-const createOrder = async (customerId, data) => {
+const createOrder = async (_customerId, _data) => {
   // TODO: implement
   throw new Error('createOrder() not implemented yet');
 };
@@ -39,7 +39,7 @@ const createOrder = async (customerId, data) => {
  * TODO (Thành viên C - Ngày 3):
  *  1. SELECT * FROM orders WHERE customer_id = $1 ORDER BY created_at DESC
  */
-const getMyOrders = async (customerId) => {
+const getMyOrders = async (_customerId) => {
   // TODO: implement
   throw new Error('getMyOrders() not implemented yet');
 };
@@ -54,7 +54,7 @@ const getMyOrders = async (customerId) => {
  *  1. SELECT order + JOIN order_items
  *  2. Kiểm tra quyền: customer chỉ xem đơn của mình, owner xem đơn nhà hàng mình
  */
-const getOrderById = async (orderId, user) => {
+const getOrderById = async (_orderId, _user) => {
   // TODO: implement
   throw new Error('getOrderById() not implemented yet');
 };
@@ -72,7 +72,7 @@ const getOrderById = async (orderId, user) => {
  *  3. UPDATE orders SET status = $1 WHERE id = $2
  *  4. Trả về order đã cập nhật
  */
-const updateOrderStatus = async (orderId, ownerId, newStatus) => {
+const updateOrderStatus = async (_orderId, _ownerId, _newStatus) => {
   // TODO: implement
   throw new Error('updateOrderStatus() not implemented yet');
 };

@@ -1,6 +1,6 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const db = require('../../config/db');
+const _bcrypt = require('bcryptjs');
+const _jwt = require('jsonwebtoken');
+const _db = require('../../config/db');
 
 /**
  * Đăng ký tài khoản mới
@@ -16,7 +16,7 @@ const db = require('../../config/db');
  *  3. INSERT vào bảng users
  *  4. Trả về user (không kèm password_hash)
  */
-const register = async (name, email, password, role = 'customer') => {
+const register = async (_name, _email, _password, _role = 'customer') => {
   // TODO: implement
   throw new Error('register() not implemented yet');
 };
@@ -33,7 +33,7 @@ const register = async (name, email, password, role = 'customer') => {
  *  3. Tạo JWT token (payload: { id, email, role })
  *  4. Trả về { token, user }
  */
-const login = async (email, password) => {
+const login = async (_email, _password) => {
   // TODO: implement
   throw new Error('login() not implemented yet');
 };
@@ -47,7 +47,7 @@ const login = async (email, password) => {
  *  1. SELECT user theo id từ DB
  *  2. Không trả về password_hash
  */
-const getProfile = async (id) => {
+const getProfile = async (_id) => {
   // TODO: implement
   throw new Error('getProfile() not implemented yet');
 };

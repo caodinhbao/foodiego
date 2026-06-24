@@ -1,4 +1,4 @@
-const db = require('../../config/db');
+const _db = require('../../config/db');
 
 /**
  * Lấy danh sách tất cả users (Admin only)
@@ -24,7 +24,7 @@ const getAllUsers = async () => {
  *  2. UPDATE users SET role = $1 WHERE id = $2
  *  3. Trả về user đã cập nhật
  */
-const updateUserRole = async (id, role) => {
+const updateUserRole = async (_id, _role) => {
   // TODO: implement
   throw new Error('updateUserRole() not implemented yet');
 };

@@ -2,20 +2,18 @@
 // Thành viên A viết (Ngày 3)
 // Chạy: npm test -- --testPathPattern=auth
 
-const authService = require('./auth.service');
+const _authService = require('./auth.service');
 
-// Mock database để test không cần DB thật
 jest.mock('../../config/db', () => ({
   query: jest.fn(),
 }));
-const db = require('../../config/db');
+const _db = require('../../config/db');
 
-// Mock bcryptjs
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed_password'),
   compare: jest.fn(),
 }));
-const bcrypt = require('bcryptjs');
+const _bcrypt = require('bcryptjs');
 
 // Mock jsonwebtoken
 jest.mock('jsonwebtoken', () => ({

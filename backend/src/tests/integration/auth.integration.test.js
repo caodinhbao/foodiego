@@ -1,8 +1,8 @@
 // Integration tests cho Auth API
 // Thành viên A viết (Ngày 4) — dùng Supertest + DB test
 
-const request = require('supertest');
-const app = require('../../../app');
+const _request = require('supertest');
+const _app = require('../../app');
 
 /**
  * TODO (Thành viên A - Ngày 4):
@@ -14,12 +14,12 @@ const app = require('../../../app');
  */
 
 describe('Auth API — Integration Tests', () => {
-  const testUser = {
+  const _testUser = {
     name: 'Test User',
     email: `test_${Date.now()}@foodiego.com`,
     password: 'password123',
   };
-  let authToken;
+  let _authToken;
 
   describe('POST /api/auth/register', () => {
     it('should register a new user and return 201', async () => {

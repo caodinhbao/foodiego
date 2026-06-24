@@ -1,4 +1,4 @@
-const db = require('../../config/db');
+const _db = require('../../config/db');
 
 /**
  * Thêm món ăn mới vào menu
@@ -13,7 +13,7 @@ const db = require('../../config/db');
  *  3. INSERT INTO menu_items
  *  4. Trả về item vừa tạo
  */
-const createMenuItem = async (restaurantId, ownerId, data) => {
+const createMenuItem = async (_restaurantId, _ownerId, _data) => {
   // TODO: implement
   throw new Error('createMenuItem() not implemented yet');
 };
@@ -26,7 +26,7 @@ const createMenuItem = async (restaurantId, ownerId, data) => {
  * TODO (Thành viên B - Ngày 2):
  *  1. SELECT * FROM menu_items WHERE restaurant_id = $1 AND is_available = true
  */
-const getMenuByRestaurant = async (restaurantId) => {
+const getMenuByRestaurant = async (_restaurantId) => {
   // TODO: implement
   throw new Error('getMenuByRestaurant() not implemented yet');
 };
@@ -42,7 +42,7 @@ const getMenuByRestaurant = async (restaurantId) => {
  *  1. Kiểm tra item tồn tại + restaurant thuộc ownerId
  *  2. UPDATE chỉ các field được truyền vào
  */
-const updateMenuItem = async (id, ownerId, data) => {
+const updateMenuItem = async (_id, _ownerId, _data) => {
   // TODO: implement
   throw new Error('updateMenuItem() not implemented yet');
 };
@@ -57,7 +57,7 @@ const updateMenuItem = async (id, ownerId, data) => {
  *  1. Kiểm tra item tồn tại + quyền
  *  2. UPDATE menu_items SET is_available = false WHERE id = $1
  */
-const deleteMenuItem = async (id, ownerId) => {
+const deleteMenuItem = async (_id, _ownerId) => {
   // TODO: implement
   throw new Error('deleteMenuItem() not implemented yet');
 };
