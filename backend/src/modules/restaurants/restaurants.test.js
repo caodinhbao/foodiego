@@ -1,10 +1,10 @@
 // Unit tests cho restaurants.service.js
 // Thành viên B viết (Ngày 3)
 
-const restaurantsService = require('./restaurants.service');
+const _restaurantsService = require('./restaurants.service');
 
 jest.mock('../../config/db', () => ({ query: jest.fn() }));
-const db = require('../../config/db');
+const _db = require('../../config/db');
 
 describe('Restaurants Service', () => {
   beforeEach(() => jest.clearAllMocks());

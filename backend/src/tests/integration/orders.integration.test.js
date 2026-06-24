@@ -1,15 +1,15 @@
 // Integration tests cho Orders API
 // Thành viên C viết (Ngày 4)
 
-const request = require('supertest');
-const app = require('../../../app');
+const _request = require('supertest');
+const _app = require('../../app');
 
 describe('Orders API — Integration Tests', () => {
-  let customerToken;
-  let ownerToken;
-  let restaurantId;
-  let menuItemId;
-  let orderId;
+  let _customerToken;
+  let _ownerToken;
+  let _restaurantId;
+  let _menuItemId;
+  let _orderId;
 
   /**
    * TODO (Thành viên C - Ngày 4):

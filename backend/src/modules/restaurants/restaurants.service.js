@@ -1,4 +1,4 @@
-const db = require('../../config/db');
+const _db = require('../../config/db');
 
 /**
  * Tạo nhà hàng mới
@@ -11,7 +11,7 @@ const db = require('../../config/db');
  *  2. INSERT INTO restaurants (owner_id, name, address, phone, status)
  *  3. Trả về restaurant vừa tạo
  */
-const createRestaurant = async (ownerId, data) => {
+const createRestaurant = async (_ownerId, _data) => {
   // TODO: implement
   throw new Error('createRestaurant() not implemented yet');
 };
@@ -37,7 +37,7 @@ const getAllRestaurants = async () => {
  *  1. SELECT * FROM restaurants WHERE id = $1
  *  2. Trả 404 nếu không tìm thấy
  */
-const getRestaurantById = async (id) => {
+const getRestaurantById = async (_id) => {
   // TODO: implement
   throw new Error('getRestaurantById() not implemented yet');
 };
@@ -54,7 +54,7 @@ const getRestaurantById = async (id) => {
  *  2. UPDATE chỉ các field được truyền vào
  *  3. Trả về restaurant đã cập nhật
  */
-const updateRestaurant = async (id, ownerId, data) => {
+const updateRestaurant = async (_id, _ownerId, _data) => {
   // TODO: implement
   throw new Error('updateRestaurant() not implemented yet');
 };
