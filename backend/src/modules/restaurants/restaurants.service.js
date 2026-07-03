@@ -17,7 +17,7 @@ const createRestaurant = async (ownerId, data) => {
 
 const getAllRestaurants = async () => {
   const { rows } = await db.query(
-    "SELECT * FROM restaurants WHERE status = 'active' ORDER BY created_at DESC"
+    'SELECT * FROM restaurants WHERE status = \'active\' ORDER BY created_at DESC'
   );
   return rows;
 };
