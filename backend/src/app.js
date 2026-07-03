@@ -1,12 +1,17 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
+const path    = require('path');
 
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+
+// ── Serve Frontend (static files) ───────────────────────────────────────────
+const frontendPath = path.join(__dirname, '..', '..', 'frontend');
+app.use(express.static(frontendPath));
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -29,9 +34,14 @@ app.use('/api/restaurants/:restaurantId/menu-items', menuItemsByRestaurantRouter
 app.use('/api/menu-items',  menuItemsRouter);
 app.use('/api/orders',      ordersRouter);
 
-// ── 404 handler ─────────────────────────────────────────────────────────────
-app.use((_req, res) => {
+// ── 404 handler (chỉ cho /api routes) ─────────────────────────────────────
+app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'Route not found' });
+});
+
+// ── Fallback: trả index.html cho mọi route khác ──────────────────────────────
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // ── Global error handler ────────────────────────────────────────────────────
