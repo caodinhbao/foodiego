@@ -193,8 +193,15 @@
         <!-- Menu -->
         <div>
           <div class="section-header">
-            <h2 class="section-title">Thực đơn</h2>
-            <p class="section-subtitle" id="menu-subtitle">Đang tải...</p>
+            <div style="display: flex; align-items: center; gap: 1rem; justify-content: space-between;">
+              <div>
+                <h2 class="section-title">Thực đơn</h2>
+                <p class="section-subtitle" id="menu-subtitle">Đang tải...</p>
+              </div>
+              <button id="reload-menu-btn" class="btn btn-primary btn-sm" onclick="reloadMenu()" style="white-space: nowrap;">
+                🔄 Xem Thực Đơn
+              </button>
+            </div>
           </div>
           <div id="menu-grid" class="menu-items-grid"></div>
         </div>
@@ -357,6 +364,53 @@
       }
     }
 
+    // ── Reload Menu ─────────────────────────────────────────────
+    async function reloadMenu() {
+      const btn = document.getElementById('reload-menu-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang tải...';
+      }
+      try {
+        const menuItems = await menuAPI.getByRestaurant(restaurantId);
+        renderMenuItems(menuItems);
+      } catch (err) {
+        showToast('Lỗi tải thực đơn: ' + (err.message || err), 'error');
+        console.error('Menu load error:', err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔄 Xem Thực Đơn';
+        }
+      }
+    }
+
+    function renderMenuItems(menuItems) {
+      const subtitle = document.getElementById('menu-subtitle');
+      if (!menuItems || !menuItems.length) {
+        if (subtitle) subtitle.textContent = 'Chưa có món ăn';
+        document.getElementById('menu-grid').innerHTML = `
+          <div class="empty-state"><div class="empty-icon">🍽️</div>
+          <h3>Chưa có thực đơn</h3><p>Nhà hàng chưa cập nhật món ăn</p></div>`;
+        return;
+      }
+      if (subtitle) subtitle.textContent = `${menuItems.length} món ăn`;
+      document.getElementById('menu-grid').innerHTML = menuItems.map((item, i) => `
+        <div class="menu-item-card fade-in">
+          <img class="menu-item-img" src="${MENU_IMGS[i % MENU_IMGS.length]}" alt="${item.name}">
+          <div class="menu-item-info">
+            <h4>${item.name}</h4>
+            <p>${item.description || 'Món ăn đặc sắc của nhà hàng'}</p>
+            <div class="menu-item-footer">
+              <span class="price">${formatCurrency(item.price)}</span>
+            </div>
+          </div>
+          <button class="add-btn" onclick='addToCart(${JSON.stringify(item)})' ${!item.is_available ? 'disabled title="Hết hàng"' : ''}>
+            ${item.is_available ? '+' : '✕'}
+          </button>
+        </div>`).join('');
+    }
+
     // ── Load Page ────────────────────────────────────────────────
     async function loadPage() {
       renderNav();
@@ -382,29 +436,7 @@
         document.title = `${restaurant.name} — FoodieGo`;
 
         // Menu
-        const subtitle = document.getElementById('menu-subtitle');
-        if (!menuItems.length) {
-          subtitle.textContent = 'Chưa có món ăn';
-          document.getElementById('menu-grid').innerHTML = `
-            <div class="empty-state"><div class="empty-icon">🍽️</div>
-            <h3>Chưa có thực đơn</h3><p>Nhà hàng chưa cập nhật món ăn</p></div>`;
-          return;
-        }
-        subtitle.textContent = `${menuItems.length} món ăn`;
-        document.getElementById('menu-grid').innerHTML = menuItems.map((item, i) => `
-          <div class="menu-item-card fade-in">
-            <img class="menu-item-img" src="${MENU_IMGS[i % MENU_IMGS.length]}" alt="${item.name}">
-            <div class="menu-item-info">
-              <h4>${item.name}</h4>
-              <p>${item.description || 'Món ăn đặc sắc của nhà hàng'}</p>
-              <div class="menu-item-footer">
-                <span class="price">${formatCurrency(item.price)}</span>
-              </div>
-            </div>
-            <button class="add-btn" onclick='addToCart(${JSON.stringify(item)})' ${!item.is_available ? 'disabled title="Hết hàng"' : ''}>
-              ${item.is_available ? '+' : '✕'}
-            </button>
-          </div>`).join('');
+        renderMenuItems(menuItems);
       } catch (err) {
         showToast('Không thể tải dữ liệu: ' + err.message, 'error');
       }

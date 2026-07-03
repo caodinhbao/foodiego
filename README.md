@@ -19,9 +19,9 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
 
 | Thành viên | Mã số SV | Vai trò chính |
 |------------|----------|---------------|
-| Thành viên bảo | XXXXXXXXX | Team Lead — Auth + Users + CI/CD |
-| Thành viên hoàng | XXXXXXXXX | Backend — Restaurants + Menu Items |
-| Thành viên thiên | XXXXXXXXX | Backend — Orders + Delivery Service (FastAPI) |
+| CAO ĐÌNH BẢO | 29219051113 | Team Lead — Auth + Users + CI/CD |
+| VÕ DUY HOÀNG | 29219020704 | Backend — Restaurants + Menu Items |
+| PHẠM HẢI THIÊN | 29219020597 | Backend — Orders + Delivery Service (FastAPI) |
 
 ---
 
@@ -167,7 +167,7 @@ npm run lint          # ESLint
 ## 🔄 Order Status Flow
 
 ```
-pending → accepted → preparing → delivering → completed
+ORDER → accepted → preparing → delivering → completed
                                             → cancelled
 ```
 
