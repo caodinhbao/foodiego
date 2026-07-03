@@ -64,7 +64,7 @@ const createOrder = async (customerId, data) => {
     await conn.beginTransaction();
 
     const [orderResult] = await conn.execute(
-      "INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, status) VALUES (?, ?, ?, ?, 'pending')",
+      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, status) VALUES (?, ?, ?, ?, \'pending\')',
       [customerId, restaurant_id, total_amount, delivery_fee]
     );
     const orderId = orderResult.insertId;
