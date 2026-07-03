@@ -1,78 +1,104 @@
 // Integration tests cho Auth API
-// Thành viên A viết (Ngày 4) — dùng Supertest + DB test
+// Thành viên A viết (Ngày 4) — dùng Supertest
+// Chạy: npm test -- --testPathPattern=auth.integration
 
-const _request = require('supertest');
-const _app = require('../../app');
+const request = require('supertest');
+const app     = require('../../app');
 
-/**
- * TODO (Thành viên A - Ngày 4):
- * Setup: trước khi chạy test, clean bảng users trong test DB
- * Teardown: sau khi xong, xóa data test
- *
- * Lưu ý: cần có file .env.test với DATABASE_URL trỏ đến DB test riêng
- * Hoặc dùng mock DB nếu không có DB trong CI
- */
+// ── Test data ─────────────────────────────────────────────────────────────
+const testUser = {
+  name:     'Bảo Integration',
+  email:    `bao_integration_${Date.now()}@foodiego.com`,
+  password: 'password123',
+};
+let authToken; // lưu JWT để dùng cho các test sau
 
-describe('Auth API — Integration Tests', () => {
-  const _testUser = {
-    name: 'Test User',
-    email: `test_${Date.now()}@foodiego.com`,
-    password: 'password123',
-  };
-  let _authToken;
+// ── POST /api/auth/register ───────────────────────────────────────────────
+describe('POST /api/auth/register', () => {
+  it('should register a new user and return 201', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send(testUser);
 
-  describe('POST /api/auth/register', () => {
-    it('should register a new user and return 201', async () => {
-      // TODO (Thành viên A - Ngày 4):
-      // const res = await request(app).post('/api/auth/register').send(testUser);
-      // expect(res.status).toBe(201);
-      // expect(res.body.user).toHaveProperty('id');
-      // expect(res.body.user.email).toBe(testUser.email);
-      // expect(res.body.user).not.toHaveProperty('password_hash');
-      expect(true).toBe(true); // placeholder
-    });
-
-    it('should return 409 if email already exists', async () => {
-      // TODO: đăng ký lại email giống lần trước → expect 409
-      expect(true).toBe(true); // placeholder
-    });
-
-    it('should return 400 if required fields are missing', async () => {
-      // TODO: gửi body thiếu password → expect 400
-      expect(true).toBe(true); // placeholder
-    });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('message');
+    expect(res.body.user).toHaveProperty('id');
+    expect(res.body.user.email).toBe(testUser.email);
+    expect(res.body.user).not.toHaveProperty('password_hash');
   });
 
-  describe('POST /api/auth/login', () => {
-    it('should login and return JWT token', async () => {
-      // TODO (Thành viên A - Ngày 4):
-      // const res = await request(app).post('/api/auth/login').send({ email, password });
-      // expect(res.status).toBe(200);
-      // expect(res.body).toHaveProperty('token');
-      // authToken = res.body.token; // lưu để dùng cho test sau
-      expect(true).toBe(true); // placeholder
-    });
+  it('should return 409 if email already registered', async () => {
+    // Đăng ký lại cùng email
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send(testUser);
 
-    it('should return 401 for wrong password', async () => {
-      // TODO: gửi sai password → expect 401
-      expect(true).toBe(true); // placeholder
-    });
+    expect(res.status).toBe(409);
+    expect(res.body).toHaveProperty('error');
   });
 
-  describe('GET /api/auth/profile', () => {
-    it('should return user profile with valid token', async () => {
-      // TODO (Thành viên A - Ngày 4):
-      // const res = await request(app)
-      //   .get('/api/auth/profile')
-      //   .set('Authorization', `Bearer ${authToken}`);
-      // expect(res.status).toBe(200);
-      // expect(res.body.email).toBe(testUser.email);
-      expect(true).toBe(true); // placeholder
-    });
+  it('should return 400 if required fields are missing', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ email: 'missing@foodiego.com' }); // thiếu name và password
 
-    it('should return 401 without token', async () => {
-      // TODO: gọi không kèm token → expect 401
-      expect(true).toBe(true); // placeholder
-    });
+    expect(res.status).toBe(400);
+  });
+});
+
+// ── POST /api/auth/login ──────────────────────────────────────────────────
+describe('POST /api/auth/login', () => {
+  it('should login and return JWT token', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: testUser.email, password: testUser.password });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('token');
+    expect(res.body.user.email).toBe(testUser.email);
+    authToken = res.body.token; // lưu token
+  });
+
+  it('should return 401 for wrong password', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: testUser.email, password: 'wrongpassword' });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('should return 401 for non-existent email', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'notexist@foodiego.com', password: 'password123' });
+
+    expect(res.status).toBe(401);
+  });
+});
+
+// ── GET /api/auth/profile ─────────────────────────────────────────────────
+describe('GET /api/auth/profile', () => {
+  it('should return user profile with valid token', async () => {
+    const res = await request(app)
+      .get('/api/auth/profile')
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.email).toBe(testUser.email);
+    expect(res.body).not.toHaveProperty('password_hash');
+  });
+
+  it('should return 401 without token', async () => {
+    const res = await request(app).get('/api/auth/profile');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('should return 401 with invalid token', async () => {
+    const res = await request(app)
+      .get('/api/auth/profile')
+      .set('Authorization', 'Bearer invalid_token_here');
+
+    expect(res.status).toBe(401);
   });
 });
