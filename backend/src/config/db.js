@@ -1,22 +1,30 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 
-// ── PostgreSQL connection pool ───────────────────────────────────────────────
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-pool.on('error', (err) => {
-  // eslint-disable-next-line no-console
-  console.error('Unexpected DB error', err);
-  process.exit(-1);
+// ── MySQL connection pool (XAMPP default) ────────────────────────────────────
+const pool = mysql.createPool({
+  host:     process.env.DB_HOST     || 'localhost',
+  port:     Number(process.env.DB_PORT) || 3306,
+  user:     process.env.DB_USER     || 'root',
+  password: process.env.DB_PASSWORD || '',          // XAMPP mặc định không có password
+  database: process.env.DB_NAME     || 'foodiego_db',
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
 /**
  * Run a SQL query
- * @param {string} text - SQL query string
- * @param {Array} params - Query parameters
- * @returns {Promise<import('pg').QueryResult>}
+ * @param {string} text   - SQL query string (dùng ? cho params)
+ * @param {Array}  params - Query parameters
+ * @returns {Promise<[rows, fields]>}
  */
-const query = (text, params) => pool.query(text, params);
+const query = async (text, params) => {
+  const [rows, fields] = await pool.execute(text, params);
+  return { rows, fields };
+};
 
-module.exports = { query, pool };
+/**
+ * Lấy một connection từ pool (dùng cho transaction)
+ */
+const getConnection = () => pool.getConnection();
+
+module.exports = { query, pool, getConnection };
