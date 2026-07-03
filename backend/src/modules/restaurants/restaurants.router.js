@@ -17,7 +17,7 @@ const authorize = require('../../middlewares/authorize');
  */
 router.post('/', authenticate, authorize('restaurant'), async (req, res, next) => {
   try {
-    // TODO: implement
+    
     const restaurant = await restaurantsService.createRestaurant(req.user.id, req.body);
     return res.status(201).json(restaurant);
   } catch (err) {
