@@ -51,22 +51,28 @@ PER_KM_RATE = 5_000
 
 def calculate_fee(distance_km: float, order_amount: float) -> dict:
     """
-    TODO (Thành viên C - Ngày 1): implement công thức tính phí
-    Trả về dict: { delivery_fee, raw_fee, discount_rate, discount_amount }
+    Tính phí giao hàng theo công thức:
+      raw_fee = base_fee + distance_km * per_km_rate
+      discount: >=200k → 20%, >=100k → 10%, còn lại → 0%
+      delivery_fee = max(0, raw_fee * (1 - discount_rate))
     """
-    # TODO: implement
     raw_fee = BASE_FEE + distance_km * PER_KM_RATE
 
-    # TODO: tính discount_rate dựa trên order_amount
-    discount_rate = 0.0
+    if order_amount >= 200_000:
+        discount_rate = 0.20
+    elif order_amount >= 100_000:
+        discount_rate = 0.10
+    else:
+        discount_rate = 0.0
 
-    delivery_fee = round(raw_fee * (1 - discount_rate), 0)
+    discount_amount = raw_fee * discount_rate
+    delivery_fee = max(0.0, round(raw_fee - discount_amount, 0))
 
     return {
         "delivery_fee": delivery_fee,
         "raw_fee": raw_fee,
         "discount_rate": discount_rate,
-        "discount_amount": raw_fee * discount_rate,
+        "discount_amount": round(discount_amount, 0),
     }
 
 

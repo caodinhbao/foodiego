@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đơn hàng của tôi — FoodieGo</title>
+  <meta name="description" content="Theo dõi trạng thái các đơn hàng của bạn trên FoodieGo.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .order-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      transition: all var(--transition);
+    }
+    .order-card:hover { border-color: var(--border-accent); }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .order-id { font-size: 0.82rem; color: var(--text-muted); margin-top: 3px; }
+    .order-restaurant { font-size: 1rem; font-weight: 700; }
+    .order-items-list { margin: 0.8rem 0; }
+    .order-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .order-meta { font-size: 0.82rem; color: var(--text-muted); }
+    .order-total-amount { font-weight: 800; color: var(--accent); font-size: 1.05rem; }
+
+    /* ── Status Timeline ────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 1rem 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .status-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 70px;
+    }
+    .status-dot-step {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      transition: all var(--transition);
+    }
+    .status-dot-step.done {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .status-dot-step.current {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+    .status-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      min-width: 20px;
+    }
+    .status-line.done { background: var(--accent); }
+    .status-label { font-size: 0.68rem; color: var(--text-muted); text-align: center; line-height: 1.2; }
+    .status-label.active { color: var(--accent); font-weight: 600; }
+
+    .orders-grid { display: flex; flex-direction: column; gap: 1.2rem; }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">🍜</span>
+      Foodie<span>Go</span>
+    </a>
+    <div class="navbar-nav" id="nav-items"></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container">
+      <section class="section">
+        <div class="section-header fade-in">
+          <h1 class="section-title">📦 Đơn hàng của tôi</h1>
+          <p class="section-subtitle">Theo dõi trạng thái đơn hàng theo thời gian thực</p>
+        </div>
+        <div id="orders-list" class="orders-grid">
+          <div class="loading-center"><div class="spinner"></div><span>Đang tải đơn hàng...</span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+
+    const STATUS_STEPS = ['pending','accepted','preparing','delivering','completed'];
+    const STATUS_ICONS = { pending:'🕐', accepted:'✅', preparing:'👨‍🍳', delivering:'🛵', completed:'🎉', cancelled:'❌' };
+    const STATUS_LABELS = { pending:'Chờ xác nhận', accepted:'Đã xác nhận', preparing:'Đang chuẩn bị', delivering:'Đang giao', completed:'Hoàn thành', cancelled:'Đã hủy' };
+
+    function renderNav() {
+      const user = getUser();
+      const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+      document.getElementById('nav-items').innerHTML = `
+        <a href="index.html" class="nav-link">🏠 Trang chủ</a>
+        <a href="orders.html" class="nav-link active">📦 Đơn hàng</a>
+        ${isAdmin() ? '<a href="admin.html" class="nav-link">⚙️ Admin</a>' : ''}
+        <div style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;" onclick="logout()">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;">${initials}</div>
+          <span>${user?.name?.split(' ').pop()}</span>
+        </div>`;
+    }
+
+    function renderStatusBar(currentStatus) {
+      if (currentStatus === 'cancelled') {
+        return `<div style="margin:0.8rem 0;"><span class="badge badge-cancelled">❌ Đơn hàng đã bị hủy</span></div>`;
+      }
+      const currentIdx = STATUS_STEPS.indexOf(currentStatus);
+      return `
+        <div class="status-bar">
+          ${STATUS_STEPS.map((s, i) => {
+            const isDone = i < currentIdx;
+            const isCurrent = i === currentIdx;
+            const dotClass = isDone ? 'done' : isCurrent ? 'current' : '';
+            const labelClass = isCurrent ? 'active' : '';
+            const lineClass = i < currentIdx ? 'done' : '';
+            return `
+              ${i > 0 ? `<div class="status-line ${lineClass}"></div>` : ''}
+              <div class="status-step">
+                <div class="status-dot-step ${dotClass}">${isDone ? '✓' : STATUS_ICONS[s]}</div>
+                <span class="status-label ${labelClass}">${STATUS_LABELS[s]}</span>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function renderOrderCard(order) {
+      const items = order.items || [];
+      return `
+        <div class="order-card fade-in">
+          <div class="order-header">
+            <div>
+              <div class="order-restaurant">🏪 ${order.restaurant_name || `Nhà hàng #${order.restaurant_id}`}</div>
+              <div class="order-id">#${order.id} • ${formatDate(order.created_at)}</div>
+            </div>
+            ${statusBadge(order.status)}
+          </div>
+          ${renderStatusBar(order.status)}
+          ${items.length ? `
+            <div class="order-items-list">
+              ${items.slice(0,3).map(i => `
+                <div class="order-item-row">
+                  <span>${i.name || i.menu_item_name || `Món #${i.menu_item_id}`} × ${i.quantity}</span>
+                  <span class="price">${formatCurrency(i.unit_price * i.quantity)}</span>
+                </div>`).join('')}
+              ${items.length > 3 ? `<div class="order-item-row text-muted">+${items.length-3} món khác...</div>` : ''}
+            </div>` : ''}
+          <div class="order-footer">
+            <div class="order-meta">
+              📍 ${order.delivery_address || 'Chưa có địa chỉ'}
+            </div>
+            <div class="order-total-amount">${formatCurrency(order.total_amount)}</div>
+          </div>
+        </div>`;
+    }
+
+    async function loadOrders() {
+      renderNav();
+      try {
+        const orders = await ordersAPI.getMy();
+        const el = document.getElementById('orders-list');
+        if (!orders.length) {
+          el.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <h3>Chưa có đơn hàng nào</h3>
+              <p>Hãy đặt món yêu thích của bạn!</p>
+              <a href="index.html" class="btn btn-primary mt-2">🍽️ Xem nhà hàng</a>
+            </div>`;
+          return;
+        }
+        el.innerHTML = orders
+          .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+          .map(renderOrderCard).join('');
+      } catch (err) {
+        showToast('Lỗi tải đơn hàng: ' + err.message, 'error');
+      }
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>

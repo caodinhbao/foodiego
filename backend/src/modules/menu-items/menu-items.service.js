@@ -1,65 +1,99 @@
 const db = require('../../config/db');
 
-/**
- * Thêm món ăn mới vào menu
- * @param {number} restaurantId
- * @param {number} ownerId - kiểm tra quyền sở hữu
- * @param {object} data - { name, description, price, is_available? }
- * @returns {Promise<object>} menu item
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. Kiểm tra restaurant tồn tại và thuộc ownerId
- *  2. Validate: name và price bắt buộc, price > 0
- *  3. INSERT INTO menu_items
- *  4. Trả về item vừa tạo
- */
 const createMenuItem = async (restaurantId, ownerId, data) => {
-  // TODO: implement
-  throw new Error('createMenuItem() not implemented yet');
+  const { name, description, price, is_available = true } = data || {};
+  if (!name || price === undefined) {
+    const err = new Error('name và price là bắt buộc');
+    err.status = 400;
+    throw err;
+  }
+  if (Number(price) <= 0) {
+    const err = new Error('price phải lớn hơn 0');
+    err.status = 400;
+    throw err;
+  }
+
+  const { rows: rest } = await db.query('SELECT * FROM restaurants WHERE id = ?', [restaurantId]);
+  if (rest.length === 0) {
+    const err = new Error('Restaurant not found');
+    err.status = 404;
+    throw err;
+  }
+  if (rest[0].owner_id !== ownerId) {
+    const err = new Error('Forbidden: not the owner');
+    err.status = 403;
+    throw err;
+  }
+
+  const { rows: result } = await db.query(
+    'INSERT INTO menu_items (restaurant_id, name, description, price, is_available) VALUES (?, ?, ?, ?, ?)',
+    [restaurantId, name, description || null, price, is_available ? 1 : 0]
+  );
+  const { rows } = await db.query('SELECT * FROM menu_items WHERE id = ?', [result.insertId]);
+  return rows[0];
 };
 
-/**
- * Lấy danh sách món ăn theo nhà hàng
- * @param {number} restaurantId
- * @returns {Promise<Array>}
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. SELECT * FROM menu_items WHERE restaurant_id = $1 AND is_available = true
- */
 const getMenuByRestaurant = async (restaurantId) => {
-  // TODO: implement
-  throw new Error('getMenuByRestaurant() not implemented yet');
+  const { rows } = await db.query(
+    'SELECT * FROM menu_items WHERE restaurant_id = ? AND is_available = 1 ORDER BY created_at DESC',
+    [restaurantId]
+  );
+  return rows;
 };
 
-/**
- * Cập nhật thông tin món ăn
- * @param {number} id
- * @param {number} ownerId - kiểm tra quyền
- * @param {object} data - { name?, description?, price?, is_available? }
- * @returns {Promise<object>}
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. Kiểm tra item tồn tại + restaurant thuộc ownerId
- *  2. UPDATE chỉ các field được truyền vào
- */
 const updateMenuItem = async (id, ownerId, data) => {
-  // TODO: implement
-  throw new Error('updateMenuItem() not implemented yet');
+  const { rows: item } = await db.query(
+    `SELECT mi.*, r.owner_id
+     FROM menu_items mi
+     JOIN restaurants r ON r.id = mi.restaurant_id
+     WHERE mi.id = ?`,
+    [id]
+  );
+  if (item.length === 0) {
+    const err = new Error('Menu item not found');
+    err.status = 404;
+    throw err;
+  }
+  if (item[0].owner_id !== ownerId) {
+    const err = new Error('Forbidden: not the owner');
+    err.status = 403;
+    throw err;
+  }
+
+  const fields = [];
+  const values = [];
+  if (data.name         !== undefined) { fields.push('name = ?');         values.push(data.name); }
+  if (data.description  !== undefined) { fields.push('description = ?');  values.push(data.description); }
+  if (data.price        !== undefined) { fields.push('price = ?');        values.push(data.price); }
+  if (data.is_available !== undefined) { fields.push('is_available = ?'); values.push(data.is_available ? 1 : 0); }
+
+  if (fields.length === 0) return item[0];
+
+  values.push(id);
+  await db.query(`UPDATE menu_items SET ${fields.join(', ')} WHERE id = ?`, values);
+  const { rows } = await db.query('SELECT * FROM menu_items WHERE id = ?', [id]);
+  return rows[0];
 };
 
-/**
- * Xóa món ăn (soft delete — set is_available = false)
- * @param {number} id
- * @param {number} ownerId - kiểm tra quyền
- * @returns {Promise<void>}
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. Kiểm tra item tồn tại + quyền
- *  2. UPDATE menu_items SET is_available = false WHERE id = $1
- */
 const deleteMenuItem = async (id, ownerId) => {
-  // TODO: implement
-  throw new Error('deleteMenuItem() not implemented yet');
+  const { rows: item } = await db.query(
+    `SELECT mi.*, r.owner_id
+     FROM menu_items mi
+     JOIN restaurants r ON r.id = mi.restaurant_id
+     WHERE mi.id = ?`,
+    [id]
+  );
+  if (item.length === 0) {
+    const err = new Error('Menu item not found');
+    err.status = 404;
+    throw err;
+  }
+  if (item[0].owner_id !== ownerId) {
+    const err = new Error('Forbidden: not the owner');
+    err.status = 403;
+    throw err;
+  }
+  await db.query('UPDATE menu_items SET is_available = 0 WHERE id = ?', [id]);
 };
 
 module.exports = { createMenuItem, getMenuByRestaurant, updateMenuItem, deleteMenuItem };

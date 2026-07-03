@@ -11,7 +11,11 @@ module.exports = {
   },
   rules: {
     'no-console': 'warn',
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'no-unused-vars': ['error', {
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_',
+    }],
     'semi': ['error', 'always'],
     'quotes': ['error', 'single'],
     'indent': ['error', 2],

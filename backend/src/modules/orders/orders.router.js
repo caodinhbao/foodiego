@@ -18,7 +18,7 @@ const authorize = require('../../middlewares/authorize');
 router.post('/', authenticate, authorize('customer'), async (req, res, next) => {
   try {
     // TODO: implement
-    const { restaurant_id, items, distance_km } = req.body;
+    const { restaurant_id, items } = req.body;
     if (!restaurant_id || !items || items.length === 0) {
       return res.status(400).json({ error: 'restaurant_id and items are required' });
     }

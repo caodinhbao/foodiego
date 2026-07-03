@@ -1,12 +1,12 @@
 // Unit tests cho orders.service.js
 // Thành viên C viết (Ngày 3-4)
 
-const { createOrder, getMyOrders, getOrderById, updateOrderStatus, STATUS_TRANSITIONS } = require('./orders.service');
+const { STATUS_TRANSITIONS } = require('./orders.service');
 
 jest.mock('../../config/db', () => ({ query: jest.fn() }));
 jest.mock('axios');
-const axios = require('axios');
-const db = require('../../config/db');
+const _axios = require('axios');
+const _db = require('../../config/db');
 
 describe('Orders Service', () => {
   beforeEach(() => jest.clearAllMocks());
