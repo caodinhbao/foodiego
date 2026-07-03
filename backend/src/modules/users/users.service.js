@@ -1,32 +1,31 @@
-const _db = require('../../config/db');
+const db = require('../../config/db');
 
-/**
- * Lấy danh sách tất cả users (Admin only)
- * @returns {Promise<Array>}
- *
- * TODO (Thành viên A - Ngày 3):
- *  1. SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC
- *  2. Không trả về password_hash
- */
+const VALID_ROLES = ['customer', 'restaurant', 'admin'];
+
 const getAllUsers = async () => {
-  // TODO: implement
-  throw new Error('getAllUsers() not implemented yet');
+  const { rows } = await db.query(
+    'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC'
+  );
+  return rows;
 };
 
-/**
- * Cập nhật role của user
- * @param {number} id
- * @param {string} role - 'customer' | 'restaurant' | 'admin'
- * @returns {Promise<{id, name, email, role}>}
- *
- * TODO (Thành viên A - Ngày 3):
- *  1. Validate role hợp lệ
- *  2. UPDATE users SET role = $1 WHERE id = $2
- *  3. Trả về user đã cập nhật
- */
-const updateUserRole = async (_id, _role) => {
-  // TODO: implement
-  throw new Error('updateUserRole() not implemented yet');
+const updateUserRole = async (id, role) => {
+  if (!VALID_ROLES.includes(role)) {
+    const err = new Error(`Role không hợp lệ. Hợp lệ: ${VALID_ROLES.join(', ')}`);
+    err.status = 400;
+    throw err;
+  }
+
+  const { rows: check } = await db.query('SELECT id FROM users WHERE id = ?', [id]);
+  if (check.length === 0) {
+    const err = new Error('User not found');
+    err.status = 404;
+    throw err;
+  }
+
+  await db.query('UPDATE users SET role = ? WHERE id = ?', [role, id]);
+  const { rows } = await db.query('SELECT id, name, email, role FROM users WHERE id = ?', [id]);
+  return rows[0];
 };
 
 module.exports = { getAllUsers, updateUserRole };
