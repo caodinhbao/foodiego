@@ -19,9 +19,9 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
 
 | Thành viên | Mã số SV | Vai trò chính |
 |------------|----------|---------------|
-| Thành viên A | XXXXXXXXX | Team Lead — Auth + Users + CI/CD |
-| Thành viên B | XXXXXXXXX | Backend — Restaurants + Menu Items |
-| Thành viên C | XXXXXXXXX | Backend — Orders + Delivery Service (FastAPI) |
+| Thành viên bảo | XXXXXXXXX | Team Lead — Auth + Users + CI/CD |
+| Thành viên hoàng | XXXXXXXXX | Backend — Restaurants + Menu Items |
+| Thành viên thiên | XXXXXXXXX | Backend — Orders + Delivery Service (FastAPI) |
 
 ---
 
