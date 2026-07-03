@@ -2,7 +2,7 @@ name: FoodieGo CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'feature/**']
   pull_request:
     branches: [main, develop]
 
@@ -13,19 +13,20 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:15-alpine
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_USER: foodiego
-          POSTGRES_PASSWORD: foodiego123
-          POSTGRES_DB: foodiego_db_test
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: foodiego_db_test
+          MYSQL_USER: foodiego
+          MYSQL_PASSWORD: foodiego123
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping -h localhost -u root -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -46,25 +47,22 @@ jobs:
         working-directory: backend
         run: npm run lint
 
-      - name: Run tests with coverage
+      - name: Run tests
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://foodiego:foodiego123@localhost:5432/foodiego_db_test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: foodiego
+          DB_PASSWORD: foodiego123
+          DB_NAME: foodiego_db_test
           JWT_SECRET: test_secret_ci
           JWT_EXPIRES_IN: 1h
           DELIVERY_SERVICE_URL: http://localhost:8000
           NODE_ENV: test
-        # Chạy test không enforce coverage threshold (skeleton phase)
-        # Sau khi thành viên implement test (Ngày 3-4), đổi lại thành: npm run test:coverage
         run: npm test
 
-      - name: Upload coverage to SonarQube
-        # TODO (Thành viên A - Ngày 3): thêm SonarQube token vào GitHub Secrets
-        # uses: SonarSource/sonarcloud-github-action@master
-        # env:
-        #   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # with:
-        #   projectBaseDir: backend
+      - name: SonarQube scan
+        # TODO (Thành viên A - Ngày 3): thêm SONAR_TOKEN vào GitHub Secrets
         run: echo "SonarQube step — configure after adding SONAR_TOKEN secret"
 
   # ── Test (Python Delivery Service) ────────────────────────────────────────
