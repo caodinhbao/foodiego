@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — FoodieGo</title>
+  <meta name="description" content="Quản lý người dùng hệ thống FoodieGo.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all var(--transition);
+    }
+    .stat-card:hover { border-color: var(--border-accent); transform: translateY(-3px); }
+    .stat-card .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .stat-card .stat-value { font-size: 2rem; font-weight: 800; color: var(--accent); }
+    .stat-card .stat-label { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+    /* ── Table ──────────────────────────────────────────────── */
+    .table-wrap {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-title { font-size: 1rem; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    td {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-avatar-sm {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .user-name { font-weight: 600; }
+    .user-email { font-size: 0.8rem; color: var(--text-muted); }
+
+    .role-select-table {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 0.35rem 0.7rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+    .role-select-table:focus { border-color: var(--accent); }
+
+    .avatar-colors { }
+    .color-customer  { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .color-restaurant{ background: linear-gradient(135deg, #ff6b35, #e0531f); }
+    .color-admin     { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    @media (max-width: 700px) {
+      th:nth-child(3), td:nth-child(3),
+      th:nth-child(4), td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">🍜</span>
+      Foodie<span>Go</span>
+    </a>
+    <div class="navbar-nav" id="nav-items"></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container">
+      <section class="section">
+        <div class="section-header fade-in">
+          <h1 class="section-title">⚙️ Admin Panel</h1>
+          <p class="section-subtitle">Quản lý người dùng và hệ thống</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="admin-stats fade-in" id="admin-stats">
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-total">–</div><div class="stat-label">Tổng người dùng</div></div>
+          <div class="stat-card"><div class="stat-icon">🧑</div><div class="stat-value" id="stat-customers">–</div><div class="stat-label">Khách hàng</div></div>
+          <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-value" id="stat-restaurants">–</div><div class="stat-label">Chủ nhà hàng</div></div>
+          <div class="stat-card"><div class="stat-icon">🛡️</div><div class="stat-value" id="stat-admins">–</div><div class="stat-label">Admin</div></div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-wrap fade-in fade-in-delay-2">
+          <div class="table-header">
+            <span class="table-title">👥 Danh sách người dùng</span>
+            <button class="btn btn-ghost btn-sm" onclick="loadUsers()">🔄 Làm mới</button>
+          </div>
+          <div id="users-table-wrap">
+            <div class="loading-center"><div class="spinner"></div><span>Đang tải...</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAdmin();
+
+    function renderNav() {
+      const user = getUser();
+      const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+      document.getElementById('nav-items').innerHTML = `
+        <a href="index.html" class="nav-link">🏠 Trang chủ</a>
+        <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
+        <a href="admin.html" class="nav-link active">⚙️ Admin</a>
+        <div style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;" onclick="logout()">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;">${initials}</div>
+          <span>${user?.name?.split(' ').pop()} · Đăng xuất</span>
+        </div>`;
+    }
+
+    function getAvatarColor(role) {
+      return { customer: 'color-customer', restaurant: 'color-restaurant', admin: 'color-admin' }[role] || 'color-customer';
+    }
+
+    async function updateRole(userId, role, selectEl) {
+      try {
+        selectEl.disabled = true;
+        await usersAPI.updateRole(userId, role);
+        showToast(`Đã cập nhật role thành "${role}"`, 'success');
+        loadUsers();
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
+        selectEl.disabled = false;
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const users = await usersAPI.getAll();
+
+        // Stats
+        document.getElementById('stat-total').textContent = users.length;
+        document.getElementById('stat-customers').textContent = users.filter(u=>u.role==='customer').length;
+        document.getElementById('stat-restaurants').textContent = users.filter(u=>u.role==='restaurant').length;
+        document.getElementById('stat-admins').textContent = users.filter(u=>u.role==='admin').length;
+
+        // Table
+        const currentUser = getUser();
+        document.getElementById('users-table-wrap').innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Người dùng</th>
+                <th>Role hiện tại</th>
+                <th>Ngày tạo</th>
+                <th>Cập nhật role</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(u => {
+                const initials = u.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+                const colorClass = getAvatarColor(u.role);
+                const isMe = u.id === currentUser?.id;
+                return `
+                  <tr>
+                    <td>
+                      <div class="user-cell">
+                        <div class="user-avatar-sm ${colorClass}">${initials}</div>
+                        <div>
+                          <div class="user-name">${u.name} ${isMe ? '<span class="badge badge-admin" style="font-size:0.65rem;">Bạn</span>' : ''}</div>
+                          <div class="user-email">${u.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span class="badge badge-${u.role}">${{ customer:'🧑 Khách hàng', restaurant:'🏪 Chủ nhà hàng', admin:'🛡️ Admin' }[u.role] || u.role}</span></td>
+                    <td class="text-muted">${formatDate(u.created_at)}</td>
+                    <td>
+                      ${isMe ? '<span class="text-muted" style="font-size:0.82rem;">Không thể đổi</span>' : `
+                        <select class="role-select-table" id="role-${u.id}" onchange="updateRole(${u.id}, this.value, this)">
+                          <option value="customer" ${u.role==='customer'?'selected':''}>🧑 Khách hàng</option>
+                          <option value="restaurant" ${u.role==='restaurant'?'selected':''}>🏪 Chủ nhà hàng</option>
+                          <option value="admin" ${u.role==='admin'?'selected':''}>🛡️ Admin</option>
+                        </select>`}
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        document.getElementById('users-table-wrap').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h3>Lỗi tải dữ liệu</h3>
+            <p>${err.message}</p>
+            <button class="btn btn-primary mt-2" onclick="loadUsers()">Thử lại</button>
+          </div>`;
+      }
+    }
+
+    renderNav();
+    loadUsers();
+  </script>
+</body>
+</html>

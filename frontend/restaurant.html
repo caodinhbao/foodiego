@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu nhà hàng — FoodieGo</title>
+  <meta name="description" content="Xem thực đơn và đặt món tại nhà hàng yêu thích trên FoodieGo.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .restaurant-hero {
+      position: relative;
+      height: 260px;
+      overflow: hidden;
+      border-radius: var(--radius-xl);
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .restaurant-hero img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.5);
+    }
+    .restaurant-hero-info {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      right: 1.5rem;
+    }
+    .restaurant-hero-info h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    }
+    .restaurant-hero-info p { color: rgba(255,255,255,0.8); margin-top: 0.3rem; }
+
+    /* ── Layout with sidebar cart ─────────────────────────────── */
+    .restaurant-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .restaurant-layout { grid-template-columns: 1fr; } }
+
+    /* ── Menu Items ───────────────────────────────────────────── */
+    .menu-item-card {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      transition: all var(--transition);
+      align-items: center;
+    }
+    .menu-item-card:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
+    .menu-item-img {
+      width: 80px; height: 80px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .menu-item-info { flex: 1; min-width: 0; }
+    .menu-item-info h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .menu-item-info p  { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.5rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .menu-item-footer { display: flex; align-items: center; justify-content: space-between; }
+    .add-btn {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform var(--transition), background var(--transition);
+    }
+    .add-btn:hover { transform: scale(1.15); background: var(--accent-light); }
+    .add-btn:disabled { opacity: 0.4; transform: none; }
+
+    /* ── Cart Sidebar ─────────────────────────────────────────── */
+    .cart-sidebar {
+      position: sticky;
+      top: 90px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .cart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+    }
+    .cart-badge {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.1rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .cart-items { padding: 1rem 1.5rem; max-height: 350px; overflow-y: auto; }
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-name { flex: 1; font-size: 0.875rem; font-weight: 600; }
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+    .qty-btn {
+      width: 24px; height: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+    }
+    .qty-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .cart-item-price { font-size: 0.82rem; color: var(--accent); font-weight: 700; min-width: 70px; text-align: right; }
+    .cart-footer { padding: 1.2rem 1.5rem; border-top: 1px solid var(--border); }
+    .cart-total { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 1rem; }
+    .cart-total .total-amount { color: var(--accent); font-size: 1.1rem; }
+    .cart-empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .cart-empty .cart-empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    /* ── Delivery Address Modal ─────────────────────────────────── */
+    .menu-items-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">🍜</span>
+      Foodie<span>Go</span>
+    </a>
+    <div class="navbar-nav" id="nav-items"></div>
+  </nav>
+
+  <!-- Order Modal -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">📦 Xác nhận đặt hàng</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="delivery-address">Địa chỉ giao hàng</label>
+          <input type="text" id="delivery-address" class="form-control" placeholder="123 Nguyễn Huệ, Q1, TP.HCM">
+        </div>
+        <div id="order-summary" style="margin-top:1rem;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" id="confirm-order-btn" onclick="confirmOrder()">🚀 Đặt hàng ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="container">
+      <!-- Restaurant Hero -->
+      <div id="restaurant-hero" class="restaurant-hero fade-in">
+        <div class="loading-center"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Main Layout -->
+      <div class="restaurant-layout">
+        <!-- Menu -->
+        <div>
+          <div class="section-header">
+            <h2 class="section-title">Thực đơn</h2>
+            <p class="section-subtitle" id="menu-subtitle">Đang tải...</p>
+          </div>
+          <div id="menu-grid" class="menu-items-grid"></div>
+        </div>
+
+        <!-- Cart -->
+        <div class="cart-sidebar">
+          <div class="cart-header">
+            <span>🛒 Giỏ hàng</span>
+            <span class="cart-badge" id="cart-count">0</span>
+          </div>
+          <div class="cart-items" id="cart-items">
+            <div class="cart-empty">
+              <div class="cart-empty-icon">🛒</div>
+              <p>Chưa có món nào<br>Chọn món từ thực đơn nhé!</p>
+            </div>
+          </div>
+          <div class="cart-footer">
+            <div class="cart-total">
+              <span>Tạm tính</span>
+              <span class="total-amount" id="cart-total">0 ₫</span>
+            </div>
+            <button class="btn btn-primary btn-block btn-lg" id="order-btn" onclick="openOrderModal()" disabled>
+              🚀 Đặt hàng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const restaurantId = params.get('id');
+    if (!restaurantId) window.location.href = 'index.html';
+
+    const MENU_IMGS = [
+      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=160&q=80',
+      'https://images.unsplash.com/photo-1529543544282-ea669407fca3?w=160&q=80',
+      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=160&q=80',
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160&q=80',
+      'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=160&q=80',
+      'https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=160&q=80',
+    ];
+
+    // ── Cart State ──────────────────────────────────────────────
+    let cart = {}; // { menuItemId: { item, qty } }
+
+    function addToCart(item) {
+      if (!isLoggedIn()) { showToast('Hãy đăng nhập để đặt hàng!', 'error'); window.location.href='login.html'; return; }
+      if (cart[item.id]) { cart[item.id].qty++; }
+      else { cart[item.id] = { item, qty: 1 }; }
+      renderCart();
+    }
+    function changeQty(id, delta) {
+      if (!cart[id]) return;
+      cart[id].qty += delta;
+      if (cart[id].qty <= 0) delete cart[id];
+      renderCart();
+    }
+    function renderCart() {
+      const items = Object.values(cart);
+      const count = items.reduce((s, c) => s + c.qty, 0);
+      const total = items.reduce((s, c) => s + c.item.price * c.qty, 0);
+
+      document.getElementById('cart-count').textContent = count;
+      document.getElementById('cart-total').textContent = formatCurrency(total);
+      document.getElementById('order-btn').disabled = count === 0;
+
+      const el = document.getElementById('cart-items');
+      if (!items.length) {
+        el.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><p>Chưa có món nào<br>Chọn món từ thực đơn nhé!</p></div>`;
+        return;
+      }
+      el.innerHTML = items.map(({ item, qty }) => `
+        <div class="cart-item">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-qty">
+            <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+            <span>${qty}</span>
+            <button class="qty-btn" onclick="changeQty(${item.id}, +1)">+</button>
+          </div>
+          <div class="cart-item-price">${formatCurrency(item.price * qty)}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── Order Modal ─────────────────────────────────────────────
+    function openOrderModal() {
+      const items = Object.values(cart);
+      const total = items.reduce((s, c) => s + c.item.price * c.qty, 0);
+      document.getElementById('order-summary').innerHTML = `
+        <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:1rem;">
+          ${items.map(({item,qty}) => `
+            <div class="d-flex justify-between" style="padding:0.4rem 0;font-size:0.875rem;">
+              <span>${item.name} × ${qty}</span>
+              <span class="price">${formatCurrency(item.price * qty)}</span>
+            </div>`).join('')}
+          <div class="divider"></div>
+          <div class="d-flex justify-between fw-bold">
+            <span>Tổng cộng</span>
+            <span class="price">${formatCurrency(total)}</span>
+          </div>
+        </div>`;
+      document.getElementById('order-modal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('order-modal').classList.remove('open'); }
+
+    async function confirmOrder() {
+      const address = document.getElementById('delivery-address').value.trim();
+      if (!address) { showToast('Vui lòng nhập địa chỉ giao hàng!', 'error'); return; }
+
+      const btn = document.getElementById('confirm-order-btn');
+      btn.disabled = true;
+      btn.textContent = 'Đang đặt hàng...';
+
+      const orderItems = Object.values(cart).map(({ item, qty }) => ({
+        menu_item_id: item.id,
+        quantity: qty,
+        unit_price: item.price,
+      }));
+      const total = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
+
+      try {
+        await ordersAPI.create({
+          restaurant_id: parseInt(restaurantId),
+          items: orderItems,
+          total_amount: total,
+          delivery_address: address,
+          delivery_fee: 15000,
+        });
+        showToast('Đặt hàng thành công! 🎉', 'success');
+        cart = {};
+        renderCart();
+        closeModal();
+        setTimeout(() => window.location.href = 'orders.html', 1200);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Đặt hàng ngay';
+      }
+    }
+
+    // ── Navbar ──────────────────────────────────────────────────
+    function renderNav() {
+      const nav = document.getElementById('nav-items');
+      nav.innerHTML = `<a href="index.html" class="nav-link">← Về trang chủ</a>`;
+      if (isLoggedIn()) {
+        const user = getUser();
+        const initials = user.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+        nav.innerHTML += `
+          <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
+          <div class="user-chip" onclick="logout()" style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;">${initials}</div>
+            <span>Đăng xuất</span>
+          </div>`;
+      } else {
+        nav.innerHTML += `<a href="login.html" class="btn btn-primary btn-sm">Đăng nhập</a>`;
+      }
+    }
+
+    // ── Load Page ────────────────────────────────────────────────
+    async function loadPage() {
+      renderNav();
+      try {
+        const [restaurant, menuItems] = await Promise.all([
+          restaurantsAPI.getById(restaurantId),
+          menuAPI.getByRestaurant(restaurantId),
+        ]);
+
+        // Hero
+        const heroImgs = [
+          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
+          'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
+          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+        ];
+        document.getElementById('restaurant-hero').innerHTML = `
+          <img src="${heroImgs[restaurantId % 3]}" alt="${restaurant.name}">
+          <div class="restaurant-hero-info">
+            <h1>${restaurant.name}</h1>
+            <p>📍 ${restaurant.address || ''} &nbsp;|&nbsp; 📞 ${restaurant.phone || ''}</p>
+          </div>`;
+
+        document.title = `${restaurant.name} — FoodieGo`;
+
+        // Menu
+        const subtitle = document.getElementById('menu-subtitle');
+        if (!menuItems.length) {
+          subtitle.textContent = 'Chưa có món ăn';
+          document.getElementById('menu-grid').innerHTML = `
+            <div class="empty-state"><div class="empty-icon">🍽️</div>
+            <h3>Chưa có thực đơn</h3><p>Nhà hàng chưa cập nhật món ăn</p></div>`;
+          return;
+        }
+        subtitle.textContent = `${menuItems.length} món ăn`;
+        document.getElementById('menu-grid').innerHTML = menuItems.map((item, i) => `
+          <div class="menu-item-card fade-in">
+            <img class="menu-item-img" src="${MENU_IMGS[i % MENU_IMGS.length]}" alt="${item.name}">
+            <div class="menu-item-info">
+              <h4>${item.name}</h4>
+              <p>${item.description || 'Món ăn đặc sắc của nhà hàng'}</p>
+              <div class="menu-item-footer">
+                <span class="price">${formatCurrency(item.price)}</span>
+              </div>
+            </div>
+            <button class="add-btn" onclick='addToCart(${JSON.stringify(item)})' ${!item.is_available ? 'disabled title="Hết hàng"' : ''}>
+              ${item.is_available ? '+' : '✕'}
+            </button>
+          </div>`).join('');
+      } catch (err) {
+        showToast('Không thể tải dữ liệu: ' + err.message, 'error');
+      }
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

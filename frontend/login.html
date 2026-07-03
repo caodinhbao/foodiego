@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập — FoodieGo</title>
+  <meta name="description" content="Đăng nhập hoặc đăng ký tài khoản FoodieGo để đặt món ăn yêu thích.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(22, 22, 29, 0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-logo .logo-icon { font-size: 3rem; display: block; margin-bottom: 0.5rem; filter: drop-shadow(0 0 16px var(--accent)); }
+    .auth-logo h1 { font-size: 1.8rem; font-weight: 800; }
+    .auth-logo h1 span { color: var(--accent); }
+    .auth-logo p { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.3rem; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    .divider-text {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin: 1.2rem 0;
+      position: relative;
+    }
+    .divider-text::before, .divider-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider-text::before { left: 0; }
+    .divider-text::after  { right: 0; }
+    .role-select { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <div class="auth-page">
+    <div class="auth-card fade-in">
+      <div class="auth-logo">
+        <span class="logo-icon">🍜</span>
+        <h1>Foodie<span>Go</span></h1>
+        <p>Đặt món ngon, giao tận nơi</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs mb-2" id="auth-tabs">
+        <button class="tab-btn active" id="tab-login-btn" onclick="switchTab('login')">Đăng nhập</button>
+        <button class="tab-btn" id="tab-register-btn" onclick="switchTab('register')">Đăng ký</button>
+      </div>
+
+      <!-- Login Form -->
+      <div class="tab-content active" id="tab-login">
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email</label>
+            <input type="email" id="login-email" class="form-control" placeholder="bao@foodiego.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Mật khẩu</label>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+          </div>
+          <div id="login-error" class="form-error mb-1" style="display:none;"></div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="login-btn">
+            Đăng nhập
+          </button>
+        </form>
+        <div class="divider-text">hoặc</div>
+        <p class="text-center text-muted" style="font-size:0.875rem;">
+          Chưa có tài khoản? <a href="#" onclick="switchTab('register')" class="text-accent fw-semibold">Đăng ký ngay</a>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div class="tab-content" id="tab-register">
+        <form id="register-form" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label" for="reg-name">Họ và tên</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="Nguyễn Văn Bảo" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email</label>
+            <input type="email" id="reg-email" class="form-control" placeholder="bao@foodiego.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password">Mật khẩu</label>
+            <input type="password" id="reg-password" class="form-control" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+          </div>
+          <div class="form-group role-select">
+            <label class="form-label" for="reg-role">Vai trò</label>
+            <select id="reg-role" class="form-control">
+              <option value="customer">🧑 Khách hàng</option>
+              <option value="restaurant">🏪 Chủ nhà hàng</option>
+            </select>
+          </div>
+          <div id="register-error" class="form-error mb-1" style="display:none;"></div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="register-btn">
+            Tạo tài khoản
+          </button>
+        </form>
+        <div class="divider-text">hoặc</div>
+        <p class="text-center text-muted" style="font-size:0.875rem;">
+          Đã có tài khoản? <a href="#" onclick="switchTab('login')" class="text-accent fw-semibold">Đăng nhập</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Nếu đã login → về trang chủ
+    if (isLoggedIn()) window.location.href = 'index.html';
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tab-${tab}-btn`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errEl = document.getElementById('login-error');
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Đang đăng nhập...';
+      errEl.style.display = 'none';
+
+      try {
+        const res = await authAPI.login(email, password);
+        setToken(res.token);
+        setUser(res.user);
+        showToast('Đăng nhập thành công! 🎉', 'success');
+        setTimeout(() => { window.location.href = 'index.html'; }, 500);
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Đăng nhập';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('register-btn');
+      const errEl = document.getElementById('register-error');
+      const name     = document.getElementById('reg-name').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const role     = document.getElementById('reg-role').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Đang tạo tài khoản...';
+      errEl.style.display = 'none';
+
+      try {
+        await authAPI.register(name, email, password, role);
+        showToast('Tạo tài khoản thành công! Hãy đăng nhập.', 'success');
+        setTimeout(() => switchTab('login'), 800);
+        document.getElementById('login-email').value = email;
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Tạo tài khoản';
+      }
+    }
+  </script>
+</body>
+</html>
