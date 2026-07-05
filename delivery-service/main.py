@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 app = FastAPI(
     title="FoodieGo Delivery Fee Service",
@@ -13,17 +13,19 @@ class DeliveryFeeRequest(BaseModel):
     distance_km: float
     order_amount: float
 
-    @validator("distance_km")
-    def distance_must_be_positive(cls, v):
-        if v < 0:
+    @field_validator("distance_km")
+    @classmethod
+    def distance_must_be_positive(cls, value: float) -> float:
+        if value < 0:
             raise ValueError("distance_km must be >= 0")
-        return v
+        return value
 
-    @validator("order_amount")
-    def amount_must_be_positive(cls, v):
-        if v < 0:
+    @field_validator("order_amount")
+    @classmethod
+    def amount_must_be_positive(cls, value: float) -> float:
+        if value < 0:
             raise ValueError("order_amount must be >= 0")
-        return v
+        return value
 
 
 class DeliveryFeeResponse(BaseModel):
