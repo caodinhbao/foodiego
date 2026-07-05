@@ -37,8 +37,8 @@
 |-----------|----------|
 | **Entry** | Backlog P0/P1 đã được duyệt |
 | **Task** | - Thiết kế ERD (Entity Relationship Diagram)<br>- Thiết kế API spec (method, endpoint, request/response)<br>- Thiết kế phân quyền theo role<br>- Định nghĩa Order status flow |
-| **Verification** | - Nhóm review ERD: đủ bảng, đúng quan hệ chưa?<br>- Review API spec: endpoint rõ ràng, consistent chưa?<br>- Xác nhận schema với yêu cầu PostgreSQL |
-| **Exit** | Có ERD hoàn chỉnh + API docs cơ bản + schema SQL được duyệt |
+| **Verification** | - Nhóm review ERD: đủ bảng, đúng quan hệ chưa?<br>- Review API spec: endpoint rõ ràng, consistent chưa?<br>- Xác nhận schema với yêu cầu **MySQL (XAMPP)** |
+| **Exit** | Có ERD hoàn chỉnh + API docs cơ bản + schema SQL (`002_mysql.sql`) được duyệt |
 
 ---
 
