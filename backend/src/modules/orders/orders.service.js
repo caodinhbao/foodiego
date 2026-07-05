@@ -33,9 +33,16 @@ const createOrder = async (customerId, data) => {
     throw err;
   }
 
+  // Kiểm tra tất cả món ăn có thuộc về nhà hàng đã chọn không
+  const hasInvalidRestaurant = menuRows.some((m) => Number(m.restaurant_id) !== Number(restaurant_id));
+  if (hasInvalidRestaurant) {
+    const err = new Error('Món ăn không thuộc nhà hàng đã chọn');
+    err.status = 400;
+    throw err;
+  }
+
   const menuMap = {};
   menuRows.forEach((m) => { menuMap[m.id] = m; });
-
   let total_amount = 0;
   const orderItems = items.map((item) => {
     const menuItem = menuMap[item.menu_item_id];
