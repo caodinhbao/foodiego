@@ -1,62 +1,63 @@
-const _db = require('../../config/db');
+const db = require('../../config/db');
 
-/**
- * Tạo nhà hàng mới
- * @param {number} ownerId
- * @param {object} data - { name, address, phone }
- * @returns {Promise<object>} restaurant
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. Validate name, address bắt buộc
- *  2. INSERT INTO restaurants (owner_id, name, address, phone, status)
- *  3. Trả về restaurant vừa tạo
- */
-const createRestaurant = async (_ownerId, _data) => {
-  // TODO: implement
-  throw new Error('createRestaurant() not implemented yet');
+const createRestaurant = async (ownerId, data) => {
+  const { name, address, phone } = data || {};
+  if (!name || !address) {
+    const err = new Error('name và address là bắt buộc');
+    err.status = 400;
+    throw err;
+  }
+  const { rows: result } = await db.query(
+    'INSERT INTO restaurants (owner_id, name, address, phone, status) VALUES (?, ?, ?, ?, ?)',
+    [ownerId, name, address, phone || null, 'active']
+  );
+  const { rows } = await db.query('SELECT * FROM restaurants WHERE id = ?', [result.insertId]);
+  return rows[0];
 };
 
-/**
- * Lấy danh sách tất cả nhà hàng (status = active)
- * @returns {Promise<Array>}
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. SELECT * FROM restaurants WHERE status = 'active' ORDER BY created_at DESC
- */
 const getAllRestaurants = async () => {
-  // TODO: implement
-  throw new Error('getAllRestaurants() not implemented yet');
+  const { rows } = await db.query(
+    'SELECT * FROM restaurants WHERE status = \'active\' ORDER BY created_at DESC'
+  );
+  return rows;
 };
 
-/**
- * Lấy chi tiết một nhà hàng
- * @param {number} id
- * @returns {Promise<object>}
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. SELECT * FROM restaurants WHERE id = $1
- *  2. Trả 404 nếu không tìm thấy
- */
-const getRestaurantById = async (_id) => {
-  // TODO: implement
-  throw new Error('getRestaurantById() not implemented yet');
+const getRestaurantById = async (id) => {
+  const { rows } = await db.query('SELECT * FROM restaurants WHERE id = ?', [id]);
+  if (rows.length === 0) {
+    const err = new Error('Restaurant not found');
+    err.status = 404;
+    throw err;
+  }
+  return rows[0];
 };
 
-/**
- * Cập nhật thông tin nhà hàng
- * @param {number} id
- * @param {number} ownerId - để kiểm tra quyền sở hữu
- * @param {object} data - { name?, address?, phone?, status? }
- * @returns {Promise<object>}
- *
- * TODO (Thành viên B - Ngày 2):
- *  1. Kiểm tra restaurant tồn tại và thuộc ownerId
- *  2. UPDATE chỉ các field được truyền vào
- *  3. Trả về restaurant đã cập nhật
- */
-const updateRestaurant = async (_id, _ownerId, _data) => {
-  // TODO: implement
-  throw new Error('updateRestaurant() not implemented yet');
+const updateRestaurant = async (id, ownerId, data) => {
+  const { rows: check } = await db.query('SELECT * FROM restaurants WHERE id = ?', [id]);
+  if (check.length === 0) {
+    const err = new Error('Restaurant not found');
+    err.status = 404;
+    throw err;
+  }
+  if (check[0].owner_id !== ownerId) {
+    const err = new Error('Forbidden: not the owner');
+    err.status = 403;
+    throw err;
+  }
+
+  const fields = [];
+  const values = [];
+  if (data.name    !== undefined) { fields.push('name = ?');    values.push(data.name); }
+  if (data.address !== undefined) { fields.push('address = ?'); values.push(data.address); }
+  if (data.phone   !== undefined) { fields.push('phone = ?');   values.push(data.phone); }
+  if (data.status  !== undefined) { fields.push('status = ?');  values.push(data.status); }
+
+  if (fields.length === 0) return check[0];
+
+  values.push(id);
+  await db.query(`UPDATE restaurants SET ${fields.join(', ')} WHERE id = ?`, values);
+  const { rows } = await db.query('SELECT * FROM restaurants WHERE id = ?', [id]);
+  return rows[0];
 };
 
 module.exports = { createRestaurant, getAllRestaurants, getRestaurantById, updateRestaurant };
