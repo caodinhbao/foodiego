@@ -6,6 +6,8 @@
   <title>Đơn hàng của tôi — FoodieGo</title>
   <meta name="description" content="Theo dõi trạng thái các đơn hàng của bạn trên FoodieGo.">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <style>
     .order-card {
       background: var(--bg-card);
@@ -91,6 +93,25 @@
     .status-label.active { color: var(--accent); font-weight: 600; }
 
     .orders-grid { display: flex; flex-direction: column; gap: 1.2rem; }
+
+    /* ── Tracking Map ───────────────────────────────────────── */
+    .tracking-panel {
+      margin-top: 1rem;
+      border-top: 1px dashed var(--border);
+      padding-top: 1rem;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+    .tracking-panel.active { display: block; }
+    .map-container {
+      width: 100%;
+      height: 250px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #e9e5dc;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -119,6 +140,8 @@
     </div>
   </div>
 
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="js/api.js"></script>
   <script>
     requireAuth();
@@ -187,17 +210,22 @@
             <div class="order-items-list">
               ${items.slice(0,3).map(i => `
                 <div class="order-item-row">
-                  <span>${i.name || i.menu_item_name || `Món #${i.menu_item_id}`} × ${i.quantity}</span>
+                  <span>${i.name || i.item_name || `Món #${i.menu_item_id}`} × ${i.quantity}</span>
                   <span class="price">${formatCurrency(i.unit_price * i.quantity)}</span>
                 </div>`).join('')}
               ${items.length > 3 ? `<div class="order-item-row text-muted">+${items.length-3} món khác...</div>` : ''}
             </div>` : ''}
           <div class="order-footer">
-            <div class="order-meta">
-              📍 ${order.delivery_address || 'Chưa có địa chỉ'}
-            </div>
+            <div class="order-meta">📍 ${order.delivery_address || 'Chưa có địa chỉ'}</div>
             <div class="order-total-amount">${formatCurrency(order.total_amount)}</div>
           </div>
+          ${order.status !== 'cancelled' ? `
+          <button class="btn btn-primary mt-2 w-100" onclick="toggleTracking(${order.id}, '${order.status}')">📍 Xem hành trình giao hàng</button>
+          <div class="tracking-panel" id="tracking-panel-${order.id}">
+            <div style="font-size:0.85rem;margin-bottom:0.5rem;color:var(--text-secondary);">Bản đồ hành trình (Live Tracking):</div>
+            <div id="map-${order.id}" class="map-container"></div>
+          </div>
+          ` : ''}
         </div>`;
     }
 
@@ -225,6 +253,87 @@
     }
 
     loadOrders();
+
+    // ── Live Tracking Logic ──────────────────────────────────────
+    const maps = {}; // lưu instance của leaflet
+    const intervals = {}; // lưu animation interval
+
+    function toggleTracking(orderId, status) {
+      const panel = document.getElementById(`tracking-panel-${orderId}`);
+      if (panel.classList.contains('active')) {
+        panel.classList.remove('active');
+        // Dọn dẹp
+        if (intervals[orderId]) clearInterval(intervals[orderId]);
+        return;
+      }
+      
+      panel.classList.add('active');
+      initMap(orderId, status);
+    }
+
+    function initMap(orderId, status) {
+      if (maps[orderId]) return; // Đã init rồi
+
+      // Tọa độ giả lập khu vực HCM
+      const resLat = 10.7769; 
+      const resLng = 106.7009; // Q1
+      
+      // Random nhà cách nhà hàng 1-2 km
+      const homeLat = resLat + (Math.random() * 0.02 - 0.01);
+      const homeLng = resLng + (Math.random() * 0.02 - 0.01);
+
+      const map = L.map(`map-${orderId}`).setView([resLat, resLng], 14);
+      maps[orderId] = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Icons
+      const resIcon = L.divIcon({ html: '<div style="font-size:24px;">🏪</div>', className: 'dummy', iconSize:[30,30] });
+      const homeIcon = L.divIcon({ html: '<div style="font-size:24px;">🏠</div>', className: 'dummy', iconSize:[30,30] });
+      const shipperIcon = L.divIcon({ html: '<div style="font-size:30px;">🛵</div>', className: 'dummy', iconSize:[35,35] });
+
+      L.marker([resLat, resLng], {icon: resIcon}).addTo(map).bindPopup('Nhà hàng');
+      L.marker([homeLat, homeLng], {icon: homeIcon}).addTo(map).bindPopup('Nhà bạn');
+
+      // Vẽ đường đứt nét
+      L.polyline([[resLat, resLng], [homeLat, homeLng]], {color: 'var(--accent)', dashArray: '5, 10'}).addTo(map);
+
+      // Shipper marker
+      let shipperMarker;
+
+      if (status === 'completed') {
+        shipperMarker = L.marker([homeLat, homeLng], {icon: shipperIcon}).addTo(map);
+        map.fitBounds([[resLat, resLng], [homeLat, homeLng]], {padding: [20,20]});
+      } 
+      else if (status === 'delivering') {
+        // Mô phỏng shipper di chuyển từ Nhà hàng -> Nhà
+        let progress = 0;
+        shipperMarker = L.marker([resLat, resLng], {icon: shipperIcon}).addTo(map);
+        
+        intervals[orderId] = setInterval(() => {
+          progress += 0.01;
+          if (progress >= 1) {
+            progress = 1;
+            clearInterval(intervals[orderId]);
+          }
+          const curLat = resLat + (homeLat - resLat) * progress;
+          const curLng = resLng + (homeLng - resLng) * progress;
+          shipperMarker.setLatLng([curLat, curLng]);
+        }, 100);
+
+        map.fitBounds([[resLat, resLng], [homeLat, homeLng]], {padding: [20,20]});
+      }
+      else {
+        // Đang chuẩn bị / Đã nhận -> Shipper vẫn ở nhà hàng
+        shipperMarker = L.marker([resLat, resLng], {icon: shipperIcon}).addTo(map);
+        map.setView([resLat, resLng], 15);
+      }
+
+      // Xử lý map resize bug khi thẻ display:none -> block
+      setTimeout(() => map.invalidateSize(), 300);
+    }
   </script>
 </body>
 </html>

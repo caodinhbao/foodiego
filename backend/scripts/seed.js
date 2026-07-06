@@ -46,6 +46,9 @@ async function seed() {
     ['Bún Bò Huế Ngon',  'bunbo.hue@restaurant.com',    hash, 'restaurant'],
     ['Cơm Tấm Sài Gòn',  'comtam.sg@restaurant.com',    hash, 'restaurant'],
     ['Pizza House VN',   'pizza.house@restaurant.com',   hash, 'restaurant'],
+    ['Phúc Long Tea',    'phuclong@restaurant.com',      hash, 'restaurant'],
+    ['Cà Phê Muối',      'caphemuoi@restaurant.com',     hash, 'restaurant'],
+    ['Ăn Vặt Cô Tám',    'anvat@restaurant.com',         hash, 'restaurant'],
   ];
 
   for (const [name, email, password_hash, role] of users) {
@@ -62,6 +65,9 @@ async function seed() {
     [6, 'Bún Bò Huế Bà Tám',      '88 Nguyễn Thị Minh Khai, Q.3, TP.HCM', '0901234562', 'active'],
     [7, 'Cơm Tấm Sườn Đặc Biệt', '45 Võ Văn Tần, Q.3, TP.HCM',           '0901234563', 'active'],
     [8, 'Pizza House Sài Gòn',    '99 Lê Lợi, Q.1, TP.HCM',               '0901234564', 'active'],
+    [9, 'Phúc Long Tea & Coffee', '120 Trần Hưng Đạo, Q.1, TP.HCM',       '0901112223', 'active'],
+    [10, 'Cà Phê Muối Chú Long',  '15 Lê Lợi, Q.1, TP.HCM',               '0901112224', 'active'],
+    [11, 'Ăn Vặt Cô Tám',         '99 Sư Vạn Hạnh, Q.10, TP.HCM',         '0901112225', 'active'],
   ];
 
   for (const [owner_id, name, address, phone, status] of restaurants) {
@@ -97,6 +103,17 @@ async function seed() {
     [4, 'Pizza Hải Sản',     'Tôm, mực, sò điệp, sốt kem',                    169000, 1],
     [4, 'Mì Ý Bolognese',    'Mì ý sốt thịt bò bằm, phô mai parmesan',       110000, 1],
     [4, 'Gà Rán',            '4 miếng gà rán giòn, chấm sốt mayo',             89000, 1],
+    // Restaurant 5: Phúc Long
+    [5, 'Trà Sữa Phúc Long', 'Trà sữa đậm vị đặc trưng',                       50000, 1],
+    [5, 'Trà Đào Cam Sả',    'Mát lạnh sảng khoái',                            55000, 1],
+    [5, 'Trà Vải',           'Trà vải ngọt thanh',                             50000, 1],
+    // Restaurant 6: Cà Phê Muối
+    [6, 'Cà Phê Muối',       'Cà phê đặc sản muối béo ngậy',                   25000, 1],
+    [6, 'Bạc Xỉu',           'Cà phê sữa đá ngọt ngào',                        30000, 1],
+    // Restaurant 7: Ăn Vặt Cô Tám
+    [7, 'Bánh Tráng Trộn',   'Bánh tráng trộn bò khô trứng cút',               25000, 1],
+    [7, 'Cá Viên Chiên',     'Cá viên, bò viên, xúc xích chiên giòn',          35000, 1],
+    [7, 'Trà Chanh',         'Trà chanh giã tay giải khát',                    15000, 1],
   ];
 
   for (const [restaurant_id, name, description, price, is_available] of menuItems) {

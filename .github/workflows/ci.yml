@@ -62,8 +62,10 @@ jobs:
         run: npm test
 
       - name: SonarQube scan
-        # TODO (Thành viên A - Ngày 3): thêm SONAR_TOKEN vào GitHub Secrets
-        run: echo "SonarQube step — configure after adding SONAR_TOKEN secret"
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ── Test (Python Delivery Service) ────────────────────────────────────────
   delivery-service:

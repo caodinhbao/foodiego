@@ -601,8 +601,8 @@
 
           <div class="order-totals">
             <div>
-              <div style="font-size:0.8rem;color:var(--text-muted);">Phí giao: ${formatCurrency(order.delivery_fee || 0)}</div>
-              <div class="order-total-amount">Tổng: ${formatCurrency((order.total_amount || 0) + (order.delivery_fee || 0))}</div>
+              <div style="font-size:0.8rem;color:var(--text-muted);">Phí giao: ${formatCurrency(Number(order.delivery_fee) || 0)}</div>
+              <div class="order-total-amount">Tổng: ${formatCurrency((Number(order.total_amount) || 0) + (Number(order.delivery_fee) || 0))}</div>
             </div>
             <div class="action-btns">${actionBtns}</div>
           </div>

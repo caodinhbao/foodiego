@@ -223,6 +223,25 @@
     </div>
   </div>
 
+  <!-- AI FoodieBot Widget -->
+  <button class="ai-bot-btn" id="ai-bot-btn" onclick="toggleAIChat()">🤖</button>
+
+  <div class="ai-chat-window" id="ai-chat-window">
+    <div class="ai-chat-header">
+      <div class="ai-chat-title">✨ FoodieBot AI</div>
+      <button class="ai-chat-close" onclick="toggleAIChat()">✕</button>
+    </div>
+    <div class="ai-chat-body" id="ai-chat-body">
+      <div class="ai-msg bot">
+        Chào bạn! Mình là FoodieBot. Hôm nay bạn muốn ăn gì? Mình có thể tìm món theo khẩu vị hoặc mức giá nhé! 😋
+      </div>
+    </div>
+    <div class="ai-chat-input-area">
+      <input type="text" class="ai-input" id="ai-input" placeholder="Gõ: 'Thèm đồ cay' hoặc 'Dưới 50k'..." onkeypress="handleAIKeypress(event)">
+      <button class="ai-send-btn" onclick="sendAIMessage()">➤</button>
+    </div>
+  </div>
+
   <script src="js/api.js"></script>
   <script>
     // ── Navbar ──────────────────────────────────────────────────
@@ -390,6 +409,128 @@
     }
 
     loadPage();
+
+    // ── AI FoodieBot Logic ──────────────────────────────────────────
+    function toggleAIChat() {
+      document.getElementById('ai-chat-window').classList.toggle('active');
+    }
+
+    function handleAIKeypress(e) {
+      if (e.key === 'Enter') sendAIMessage();
+    }
+
+    function addChatMsg(text, sender, isHtml = false) {
+      const body = document.getElementById('ai-chat-body');
+      const msg = document.createElement('div');
+      msg.className = `ai-msg ${sender}`;
+      if (isHtml) msg.innerHTML = text;
+      else msg.textContent = text;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function showTyping() {
+      const body = document.getElementById('ai-chat-body');
+      const msg = document.createElement('div');
+      msg.className = 'ai-msg bot';
+      msg.id = 'typing-indicator';
+      msg.innerHTML = `<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function removeTyping() {
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
+    }
+
+    async function sendAIMessage() {
+      const input = document.getElementById('ai-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      addChatMsg(text, 'user');
+      showTyping();
+
+      // Giả lập độ trễ AI suy nghĩ
+      setTimeout(() => {
+        removeTyping();
+        processAIResponse(text.toLowerCase());
+      }, 1200 + Math.random() * 800);
+    }
+
+    function processAIResponse(query) {
+      const foodDb = [
+        { id: 1, name: 'Gà rán giòn rụm', price: 45000, tags: ['chiên', 'gà', 'rẻ', 'fastfood', 'gà rán'], img: PLACEHOLDER_IMGS[0], resId: 1 },
+        { id: 2, name: 'Salad gà nướng', price: 65000, tags: ['healthy', 'salad', 'giảm cân', 'nhẹ nhàng', 'rau'], img: PLACEHOLDER_IMGS[1], resId: 1 },
+        { id: 3, name: 'Mì cay hải sản', price: 55000, tags: ['cay', 'nóng', 'hải sản', 'mì', 'mì cay'], img: PLACEHOLDER_IMGS[2], resId: 2 },
+        { id: 4, name: 'Trà sữa trân châu', price: 30000, tags: ['ngọt', 'trà sữa', 'uống', 'rẻ', 'trà'], img: PLACEHOLDER_IMGS[3], resId: 3 },
+        { id: 5, name: 'Bún bò Huế', price: 50000, tags: ['bún', 'bò', 'nước', 'cay', 'bún bò'], img: PLACEHOLDER_IMGS[4], resId: 4 },
+        { id: 6, name: 'Phở bò tái nạm', price: 55000, tags: ['phở', 'bò', 'nước', 'truyền thống', 'phở bò'], img: PLACEHOLDER_IMGS[5], resId: 5 },
+        { id: 7, name: 'Cơm tấm sườn bì', price: 40000, tags: ['cơm', 'cơm tấm', 'sườn', 'no'], img: PLACEHOLDER_IMGS[0], resId: 6 },
+        { id: 8, name: 'Bánh mì thịt nướng', price: 25000, tags: ['bánh mì', 'rẻ', 'nhanh', 'thịt nướng'], img: PLACEHOLDER_IMGS[1], resId: 7 },
+        { id: 9, name: 'Trà Sữa Phúc Long', price: 50000, tags: ['trà sữa', 'phúc long', 'uống', 'ngọt'], img: PLACEHOLDER_IMGS[2], resId: 5 },
+        { id: 10, name: 'Cà Phê Muối', price: 25000, tags: ['cà phê', 'uống', 'tỉnh táo', 'cafe'], img: PLACEHOLDER_IMGS[3], resId: 6 },
+        { id: 11, name: 'Bánh Tráng Trộn', price: 25000, tags: ['bánh tráng', 'ăn vặt', 'cay', 'rẻ'], img: PLACEHOLDER_IMGS[4], resId: 7 },
+        { id: 12, name: 'Cá Viên Chiên', price: 35000, tags: ['cá viên', 'chiên', 'ăn vặt', 'rẻ'], img: PLACEHOLDER_IMGS[5], resId: 7 }
+      ];
+
+      let match = null;
+      let replyText = "";
+
+      // Basic greeting check
+      if (query === 'chào' || query === 'hi' || query === 'hello' || query === 'chào bot') {
+        addChatMsg("Chào bạn! Mình có thể giúp bạn tìm món ăn gì hôm nay?", 'bot');
+        return;
+      }
+
+      // Exact direct matching based on food tags
+      const matchedFoods = foodDb.filter(f => 
+        f.tags.some(tag => query.includes(tag))
+      );
+
+      if (matchedFoods.length > 0) {
+        match = matchedFoods[0]; // pick the first match
+        replyText = `Mình thấy bạn nhắc đến món này. Mình gợi ý **${match.name}** rất hợp với bạn nè! Thử ngay nhé 🥰:`;
+      } 
+      // Rule-based matching fallback for generic intents
+      else if (query.includes('rẻ') || query.includes('dưới 50') || query.includes('sinh viên')) {
+        match = foodDb.find(f => f.price <= 50000);
+        replyText = "Hàng ngon bổ rẻ dưới 50k đây! Đảm bảo no bụng mà không mỏng ví 😉:";
+      } else if (query.includes('giảm cân') || query.includes('healthy') || query.includes('ốm') || query.includes('nhẹ')) {
+        match = foodDb.find(f => f.tags.includes('healthy'));
+        replyText = "Ăn nhẹ nhàng, thanh đạm mà vẫn đủ chất thì chọn ngay món này nhé 🥗:";
+      } else if (query.includes('cà phê') || query.includes('cafe') || query.includes('buồn ngủ') || query.includes('tỉnh táo')) {
+        match = foodDb.find(f => f.tags.includes('cà phê'));
+        replyText = "Cần tỉnh táo thì làm ngay ly Cà phê đậm đà này nhé ☕:";
+      } else if (query.includes('ăn vặt') || query.includes('lai rai') || query.includes('bánh tráng') || query.includes('chiên')) {
+        match = foodDb.find(f => f.tags.includes('ăn vặt'));
+        replyText = "Lai rai ăn vặt thì món này là số dách luôn! Nhâm nhi bao ghiền 🍢:";
+      } else if (query.includes('ngọt') || query.includes('khát') || query.includes('nước') || query.includes('trà sữa')) {
+        match = foodDb.find(f => f.tags.includes('uống') || f.tags.includes('trà sữa'));
+        replyText = "Nạp tí đường cho đời thêm tươi vui nào 🧋:";
+      } else {
+        // No match found
+        replyText = "Xin lỗi bạn, hiện tại FoodieBot không tìm thấy món nào liên quan đến yêu cầu này. Bạn thử tìm các món như **Trà sữa, Ăn vặt, Cà phê hay Phở** xem sao nhé! 😅";
+        addChatMsg(replyText, 'bot', true);
+        return; // Early return, don't show card
+      }
+
+      if (match) {
+        const cardHtml = `
+          ${replyText}
+          <a href="restaurant.html?id=${match.resId}" class="ai-food-card">
+            <img src="${match.img}" class="ai-food-img">
+            <div class="ai-food-info">
+              <div class="ai-food-name">${match.name}</div>
+              <div class="ai-food-price">${formatCurrency(match.price)}</div>
+            </div>
+          </a>
+        `;
+        addChatMsg(cardHtml, 'bot', true);
+      }
+    }
   </script>
 </body>
 </html>
