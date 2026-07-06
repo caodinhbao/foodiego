@@ -150,9 +150,11 @@ describe('Orders Service', () => {
     });
 
     it('should reject an unavailable or missing menu item', async () => {
-      _db.query.mockResolvedValue({
-        rows: [],
-      });
+      // First call: user exists check → return valid user
+      // Second call: menu items check → return empty (item not found/unavailable)
+      _db.query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // user exists
+        .mockResolvedValueOnce({ rows: [] });           // menu item not found
 
       await expect(
         createOrder(1, {
@@ -166,6 +168,7 @@ describe('Orders Service', () => {
 
       expect(_db.pool.getConnection).not.toHaveBeenCalled();
     });
+
 
     it('should use fallback delivery fee when delivery service fails', async () => {
       _db.query.mockResolvedValue({

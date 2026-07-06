@@ -53,6 +53,30 @@
     .divider-text::before { left: 0; }
     .divider-text::after  { right: 0; }
     .role-select { margin-top: 0.5rem; }
+    /* ── Show/hide password ── */
+    .input-password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-password-wrap .form-control {
+      flex: 1;
+      padding-right: 2.8rem;
+    }
+    .toggle-pwd {
+      position: absolute;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    .toggle-pwd:hover { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -82,7 +106,10 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="login-password">Mật khẩu</label>
-            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+            <div class="input-password-wrap">
+              <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+              <button type="button" class="toggle-pwd" onclick="togglePassword('login-password', this)" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">👁</button>
+            </div>
           </div>
           <div id="login-error" class="form-error mb-1" style="display:none;"></div>
           <button type="submit" class="btn btn-primary btn-lg btn-block" id="login-btn">
@@ -108,7 +135,10 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="reg-password">Mật khẩu</label>
-            <input type="password" id="reg-password" class="form-control" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+            <div class="input-password-wrap">
+              <input type="password" id="reg-password" class="form-control" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+              <button type="button" class="toggle-pwd" onclick="togglePassword('reg-password', this)" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">👁</button>
+            </div>
           </div>
           <div class="form-group role-select">
             <label class="form-label" for="reg-role">Vai trò</label>
@@ -140,6 +170,14 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(`tab-${tab}-btn`).classList.add('active');
       document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.textContent = isHidden ? '🙈' : '👁';
+      btn.title = isHidden ? 'Ẩn mật khẩu' : 'Hiện mật khẩu';
     }
 
     async function handleLogin(e) {

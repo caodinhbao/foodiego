@@ -81,4 +81,45 @@ router.patch('/:id', authenticate, authorize('restaurant'), async (req, res, nex
   }
 });
 
+/**
+ * GET /api/restaurants/:id/orders
+ * Lấy tất cả đơn hàng của nhà hàng — chỉ owner của nhà hàng đó
+ */
+router.get('/:id/orders', authenticate, authorize('restaurant', 'admin'), async (req, res, next) => {
+  try {
+    const db = require('../../config/db');
+    const restaurantId = req.params.id;
+
+    // Kiểm tra quyền: phải là owner hoặc admin
+    if (req.user.role === 'restaurant') {
+      const { rows: rest } = await db.query('SELECT owner_id FROM restaurants WHERE id = ?', [restaurantId]);
+      if (!rest.length || rest[0].owner_id !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden: not the restaurant owner' });
+      }
+    }
+
+    const { rows: orders } = await db.query(
+      'SELECT * FROM orders WHERE restaurant_id = ? ORDER BY created_at DESC',
+      [restaurantId]
+    );
+
+    // Thêm items cho từng order
+    for (const order of orders) {
+      const { rows: items } = await db.query(
+        `SELECT oi.*, mi.name AS item_name
+         FROM order_items oi
+         JOIN menu_items mi ON mi.id = oi.menu_item_id
+         WHERE oi.order_id = ?`,
+        [order.id]
+      );
+      order.items = items;
+    }
+
+    return res.status(200).json(orders);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
+

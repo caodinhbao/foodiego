@@ -20,6 +20,14 @@ const createOrder = async (customerId, data) => {
     throw err;
   }
 
+  // Kiểm tra customer tồn tại (tránh lỗi FK khi token cũ)
+  const { rows: userRows } = await db.query('SELECT id FROM users WHERE id = ?', [customerId]);
+  if (userRows.length === 0) {
+    const err = new Error('Phiên đăng nhập hết hạn. Vui lòng đăng xuất và đăng nhập lại.');
+    err.status = 401;
+    throw err;
+  }
+
   const menuItemIds = items.map((i) => i.menu_item_id);
   const placeholders = menuItemIds.map(() => '?').join(',');
   const { rows: menuRows } = await db.query(

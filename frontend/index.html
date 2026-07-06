@@ -183,6 +183,7 @@
         <div class="hero-actions">
           <a href="#restaurants" class="btn btn-primary btn-lg">🍽️ Xem nhà hàng</a>
           <a href="orders.html" class="btn btn-ghost btn-lg" id="my-orders-btn">📦 Đơn của tôi</a>
+          <a href="restaurant-dashboard.html" class="btn btn-ghost btn-lg" id="restaurant-dash-btn" style="display:none">🏪 Quản lý nhà hàng</a>
         </div>
         <div class="hero-stats">
           <div class="stat-item"><span class="stat-value" id="stat-restaurants">–</span><span class="stat-label">Nhà hàng</span></div>
@@ -226,6 +227,7 @@
         const initials = user.name?.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() || '?';
         nav.innerHTML = `
           <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
+          ${isRestaurant() ? '<a href="restaurant-dashboard.html" class="btn btn-primary btn-sm">🏪 Dashboard Nhà Hàng</a>' : ''}
           ${isAdmin() ? '<a href="admin.html" class="nav-link">⚙️ Admin</a>' : ''}
           <div class="user-chip" onclick="logout()">
             <div class="user-avatar">${initials}</div>
@@ -240,6 +242,7 @@
         `;
       }
     }
+
 
     // ── Restaurant Cards ─────────────────────────────────────────
     const PLACEHOLDER_IMGS = [
@@ -316,6 +319,14 @@
     // ── Load Data ────────────────────────────────────────────────
     async function loadPage() {
       renderNav();
+
+      // Hiện button phù hợp theo role
+      if (isRestaurant()) {
+        document.getElementById('restaurant-dash-btn').style.display = '';
+        document.getElementById('my-orders-btn').style.display = 'none';
+      } else if (!isLoggedIn()) {
+        document.getElementById('my-orders-btn').style.display = 'none';
+      }
 
       const grid = document.getElementById('restaurants-grid');
       grid.innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div><span>Đang tải nhà hàng...</span></div>`;
