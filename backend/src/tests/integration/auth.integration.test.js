@@ -129,6 +129,7 @@ describe('GET /api/auth/profile', () => {
 
   it('should return 401 without token', async () => {
     const res = await request(app).get('/api/auth/profile');
+
     expect(res.status).toBe(401);
   });
 
