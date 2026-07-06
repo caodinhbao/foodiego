@@ -455,16 +455,20 @@
           </div>
         </div>
 
-        <div class="card" style="padding:2rem;text-align:center;color:var(--text-muted);">
-          <div style="font-size:3rem;margin-bottom:1rem;">📈</div>
-          <h3>Biểu đồ doanh thu</h3>
-          <p style="margin-top:0.5rem;">Tính năng đang phát triển — sẽ có ở phiên bản tiếp theo!</p>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:0.5rem;">
+          <h3 style="margin-bottom:1.2rem;font-size:1rem;font-weight:700;">📈 Doanh thu 7 ngày gần nhất</h3>
+          <canvas id="revenue-chart" height="100"></canvas>
+          <div id="no-revenue-data" style="display:none;text-align:center;padding:2rem;color:var(--text-muted);">
+            <div style="font-size:2.5rem;margin-bottom:0.5rem;">📊</div>
+            <p>Chưa có dữ liệu doanh thu.<br>Hoàn thành đơn hàng để xem biểu đồ!</p>
+          </div>
         </div>
       </section>
 
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="js/api.js"></script>
   <script>
     // ── Auth guard ───────────────────────────────────────
@@ -807,14 +811,97 @@
       document.getElementById('stat-revenue').textContent      = formatCurrency(revenue);
     }
 
-    // ── Section switching ────────────────────────────────
+    // ── Section switching ─────────────────────────────
     function showSection(name) {
       ['orders', 'menu', 'stats'].forEach(s => {
         document.getElementById(`section-${s}`).style.display = s === name ? '' : 'none';
         document.getElementById(`nav-${s}`)?.classList.toggle('active', s === name);
       });
       if (name === 'menu') loadMenu();
-      if (name === 'stats') updateStats();
+      if (name === 'stats') { updateStats(); loadRevenue(); }
+    }
+
+    // ── Revenue Chart (Chart.js) ────────────────────────
+    let revenueChart = null;
+
+    async function loadRevenue() {
+      if (!myRestaurant) return;
+      try {
+        const data = await revenueAPI.getByRestaurant(myRestaurant.id);
+        const canvas = document.getElementById('revenue-chart');
+        const noData = document.getElementById('no-revenue-data');
+
+        if (!data.length) {
+          canvas.style.display = 'none';
+          noData.style.display = 'block';
+          return;
+        }
+        canvas.style.display = 'block';
+        noData.style.display = 'none';
+
+        const labels  = data.map(d => new Date(d.date).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' }));
+        const revenue = data.map(d => Number(d.revenue || 0));
+        const orders  = data.map(d => Number(d.total_orders || 0));
+
+        if (revenueChart) revenueChart.destroy();
+        revenueChart = new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Doanh thu (VNĐ)',
+                data: revenue,
+                backgroundColor: 'rgba(255,107,53,0.7)',
+                borderColor: 'rgba(255,107,53,1)',
+                borderWidth: 2,
+                borderRadius: 6,
+                yAxisID: 'y',
+              },
+              {
+                label: 'Số đơn',
+                data: orders,
+                type: 'line',
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96,165,250,0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#60a5fa',
+                tension: 0.4,
+                yAxisID: 'y1',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { labels: { color: '#e2e8f0', font: { size: 12 } } },
+              tooltip: {
+                callbacks: {
+                  label: ctx => ctx.datasetIndex === 0
+                    ? `Doanh thu: ${Number(ctx.raw).toLocaleString('vi-VN')} ₫`
+                    : `Đơn: ${ctx.raw}`,
+                },
+              },
+            },
+            scales: {
+              x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              y: {
+                type: 'linear', position: 'left',
+                ticks: { color: '#94a3b8', callback: v => (v/1000).toFixed(0)+'k' },
+                grid: { color: 'rgba(255,255,255,0.05)' },
+              },
+              y1: {
+                type: 'linear', position: 'right',
+                ticks: { color: '#60a5fa', stepSize: 1 },
+                grid: { drawOnChartArea: false },
+              },
+            },
+          },
+        });
+      } catch (e) {
+        console.warn('Không thể tải doanh thu:', e.message);
+      }
     }
 
     // ── Auto refresh every 15s ───────────────────────────

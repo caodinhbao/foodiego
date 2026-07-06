@@ -145,6 +145,38 @@
 
     /* ── Delivery Address Modal ─────────────────────────────────── */
     .menu-items-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    /* ── Reviews ──────────────────────────────────────────────── */
+    .reviews-section { margin-top: 2.5rem; }
+    .avg-rating-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(234,179,8,0.15);
+      border: 1px solid rgba(234,179,8,0.3);
+      border-radius: 999px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.9rem; font-weight: 700; color: #fbbf24;
+      margin-left: 1rem;
+    }
+    .star-row { display: flex; gap: 4px; margin-bottom: 0.5rem; }
+    .star {
+      font-size: 1.5rem; cursor: pointer;
+      transition: transform 0.15s;
+      color: rgba(255,255,255,0.2);
+    }
+    .star.active { color: #fbbf24; }
+    .star:hover { transform: scale(1.2); }
+    .review-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+    .review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+    .review-author { font-weight: 600; font-size: 0.9rem; }
+    .review-stars { color: #fbbf24; font-size: 0.9rem; }
+    .review-comment { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.3rem; }
+    .review-date { font-size: 0.75rem; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -226,6 +258,43 @@
             <button class="btn btn-primary btn-block btn-lg" id="order-btn" onclick="openOrderModal()" disabled>
               🚀 Đặt hàng
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Reviews Section ── -->
+    <div class="container" style="padding-bottom:3rem;">
+      <div class="reviews-section fade-in" id="reviews-section">
+        <div class="section-header d-flex justify-between align-center" style="margin-bottom:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <h2 class="section-title">⭐ Đánh giá</h2>
+            <span class="avg-rating-badge" id="avg-rating-badge" style="display:none"></span>
+          </div>
+        </div>
+
+        <!-- Form đánh giá (chỉ hiện với customer đã hoàn thành đơn) -->
+        <div id="review-form-wrap" style="display:none;margin-bottom:1.5rem;">
+          <div class="card" style="padding:1.5rem;">
+            <h4 style="margin-bottom:1rem;">✍️ Viết đánh giá của bạn</h4>
+            <div class="star-row" id="star-row">
+              <span class="star" onclick="setRating(1)">★</span>
+              <span class="star" onclick="setRating(2)">★</span>
+              <span class="star" onclick="setRating(3)">★</span>
+              <span class="star" onclick="setRating(4)">★</span>
+              <span class="star" onclick="setRating(5)">★</span>
+            </div>
+            <textarea id="review-comment" class="form-control" rows="3"
+              placeholder="Chia sẻ cảm nhận của bạn về nhà hàng..." style="resize:none;margin-bottom:0.75rem;"></textarea>
+            <button class="btn btn-primary" onclick="submitReview()">Gửi đánh giá 🚀</button>
+          </div>
+        </div>
+
+        <!-- Danh sách đánh giá -->
+        <div id="reviews-list">
+          <div style="color:var(--text-muted);text-align:center;padding:2rem;">
+            <div class="spinner" style="margin:0 auto 1rem;"></div>
+            <p>Đang tải đánh giá...</p>
           </div>
         </div>
       </div>
@@ -411,32 +480,125 @@
         </div>`).join('');
     }
 
+    // ── Reviews Logic ────────────────────────────────────────────
+    let selectedRating = 0;
+
+    function setRating(val) {
+      selectedRating = val;
+      document.querySelectorAll('#star-row .star').forEach((s, i) => {
+        s.classList.toggle('active', i < val);
+      });
+    }
+
+    async function loadReviews() {
+      try {
+        const data = await reviewsAPI.getByRestaurant(restaurantId);
+
+        // Hiện avg rating badge
+        const badge = document.getElementById('avg-rating-badge');
+        if (data.avg_rating) {
+          badge.textContent = `⭐ ${data.avg_rating} (${data.total} đánh giá)`;
+          badge.style.display = 'inline-flex';
+        }
+
+        // Hiện form nếu là customer đã hoàn thành đơn
+        if (isCustomer()) {
+          document.getElementById('review-form-wrap').style.display = 'block';
+        }
+
+        // Render reviews
+        const list = document.getElementById('reviews-list');
+        if (!data.reviews.length) {
+          list.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted);">
+            <div style="font-size:2.5rem;margin-bottom:0.5rem;">💬</div>
+            <p>Chưa có đánh giá nào.<br>Hãy là người đầu tiên!</p>
+          </div>`;
+          return;
+        }
+        list.innerHTML = data.reviews.map(r => `
+          <div class="review-card">
+            <div class="review-header">
+              <span class="review-author">👤 ${r.customer_name}</span>
+              <span class="review-date">${formatDate(r.created_at)}</span>
+            </div>
+            <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+            ${r.comment ? `<div class="review-comment">"${r.comment}"</div>` : ''}
+          </div>`).join('');
+      } catch (e) {
+        document.getElementById('reviews-list').innerHTML =
+          `<p style="color:var(--text-muted);text-align:center;">Không thể tải đánh giá.</p>`;
+      }
+    }
+
+    async function submitReview() {
+      if (!selectedRating) { showToast('Vui lòng chọn số sao!', 'error'); return; }
+      const comment = document.getElementById('review-comment').value.trim();
+      try {
+        await reviewsAPI.create(restaurantId, selectedRating, comment);
+        showToast('✅ Cảm ơn bạn đã đánh giá!', 'success');
+        document.getElementById('review-form-wrap').style.display = 'none';
+        loadReviews();
+      } catch (e) {
+        showToast(e.message || 'Đánh giá thất bại', 'error');
+      }
+    }
+
     // ── Load Page ────────────────────────────────────────────────
     async function loadPage() {
       renderNav();
       try {
-        const [restaurant, menuItems] = await Promise.all([
+        const [restaurant, menuItems, reviewData] = await Promise.all([
           restaurantsAPI.getById(restaurantId),
           menuAPI.getByRestaurant(restaurantId),
+          reviewsAPI.getByRestaurant(restaurantId).catch(() => ({ avg_rating: null, total: 0, reviews: [] })),
         ]);
 
-        // Hero
+        // Hero — kèm avg rating
         const heroImgs = [
           'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
           'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
           'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
         ];
+        const ratingHtml = reviewData.avg_rating
+          ? `<span style="background:rgba(234,179,8,0.2);border:1px solid rgba(234,179,8,0.4);border-radius:999px;padding:0.2rem 0.8rem;font-size:0.9rem;font-weight:700;color:#fbbf24;margin-left:0.75rem;">⭐ ${reviewData.avg_rating}</span>`
+          : '';
         document.getElementById('restaurant-hero').innerHTML = `
           <img src="${heroImgs[restaurantId % 3]}" alt="${restaurant.name}">
           <div class="restaurant-hero-info">
-            <h1>${restaurant.name}</h1>
-            <p>📍 ${restaurant.address || ''} &nbsp;|&nbsp; 📞 ${restaurant.phone || ''}</p>
+            <h1>${restaurant.name}${ratingHtml}</h1>
+            <p>📍 ${restaurant.address || ''} &nbsp;|&nbsp; 📞 ${restaurant.phone || ''} &nbsp;|&nbsp; 💬 ${reviewData.total} đánh giá</p>
           </div>`;
 
         document.title = `${restaurant.name} — FoodieGo`;
 
         // Menu
         renderMenuItems(menuItems);
+
+        // Reviews — render từ data đã fetch
+        const badge = document.getElementById('avg-rating-badge');
+        if (reviewData.avg_rating) {
+          badge.textContent = `⭐ ${reviewData.avg_rating} (${reviewData.total} đánh giá)`;
+          badge.style.display = 'inline-flex';
+        }
+        if (isCustomer()) document.getElementById('review-form-wrap').style.display = 'block';
+
+        const list = document.getElementById('reviews-list');
+        if (!reviewData.reviews.length) {
+          list.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted);">
+            <div style="font-size:2.5rem;margin-bottom:0.5rem;">💬</div>
+            <p>Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+          </div>`;
+        } else {
+          list.innerHTML = reviewData.reviews.map(r => `
+            <div class="review-card">
+              <div class="review-header">
+                <span class="review-author">👤 ${r.customer_name}</span>
+                <span class="review-date">${formatDate(r.created_at)}</span>
+              </div>
+              <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+              ${r.comment ? `<div class="review-comment">"${r.comment}"</div>` : ''}
+            </div>`).join('');
+        }
       } catch (err) {
         showToast('Không thể tải dữ liệu: ' + err.message, 'error');
       }

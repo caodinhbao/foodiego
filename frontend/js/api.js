@@ -73,6 +73,21 @@ const usersAPI = {
   updateRole: (id, role) => apiFetch(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
 };
 
+// ── Reviews ────────────────────────────────────────────────────
+const reviewsAPI = {
+  getByRestaurant: (restaurantId) => apiFetch(`/restaurants/${restaurantId}/reviews`),
+  create: (restaurantId, rating, comment) =>
+    apiFetch(`/restaurants/${restaurantId}/reviews`, {
+      method: 'POST',
+      body: JSON.stringify({ rating, comment }),
+    }),
+};
+
+// ── Revenue ────────────────────────────────────────────────────
+const revenueAPI = {
+  getByRestaurant: (restaurantId) => apiFetch(`/restaurants/${restaurantId}/revenue`),
+};
+
 // ── Auth State Helpers ─────────────────────────────────────────────
 function isLoggedIn()    { return !!getToken(); }
 function isAdmin()       { return getUser()?.role === 'admin'; }
