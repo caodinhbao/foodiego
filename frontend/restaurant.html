@@ -204,6 +204,20 @@
           <label class="form-label" for="delivery-address">Địa chỉ giao hàng</label>
           <input type="text" id="delivery-address" class="form-control" placeholder="123 Nguyễn Huệ, Q1, TP.HCM">
         </div>
+
+        <!-- Voucher -->
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label class="form-label">🎟️ Mã giảm giá <span style="color:var(--text-muted);font-weight:400;">(tùy chọn)</span></label>
+          <div style="display:flex;gap:0.5rem;">
+            <input type="text" id="voucher-code" class="form-control"
+              placeholder="FOODIE10 / SHIP0 / NEWUSER..." style="text-transform:uppercase;letter-spacing:1px;">
+            <button class="btn btn-ghost btn-sm" onclick="applyVoucher()" id="apply-voucher-btn"
+              style="white-space:nowrap;flex-shrink:0;">Áp dụng</button>
+          </div>
+          <div id="voucher-msg" style="margin-top:0.4rem;font-size:0.82rem;display:none;"></div>
+        </div>
+
+        </div>
         <div id="order-summary" style="margin-top:1rem;"></div>
       </div>
       <div class="modal-footer">
@@ -360,8 +374,11 @@
 
     // ── Order Modal ─────────────────────────────────────────────
     function openOrderModal() {
-      const items = Object.values(cart);
-      const total = items.reduce((s, c) => s + c.item.price * c.qty, 0);
+      const items  = Object.values(cart);
+      const subtotal = items.reduce((s, c) => s + c.item.price * c.qty, 0);
+      const discount = appliedVoucher ? appliedVoucher.discount_amount : 0;
+      const final    = Math.max(0, subtotal - discount);
+
       document.getElementById('order-summary').innerHTML = `
         <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:1rem;">
           ${items.map(({item,qty}) => `
@@ -370,14 +387,61 @@
               <span class="price">${formatCurrency(item.price * qty)}</span>
             </div>`).join('')}
           <div class="divider"></div>
+          <div class="d-flex justify-between" style="font-size:0.875rem;">
+            <span>Tạm tính</span>
+            <span>${formatCurrency(subtotal)}</span>
+          </div>
+          <div class="d-flex justify-between" style="font-size:0.875rem;">
+            <span>Phí giao hàng</span>
+            <span>+${formatCurrency(15000)}</span>
+          </div>
+          ${discount ? `
+          <div class="d-flex justify-between" style="font-size:0.875rem;color:#4ade80;">
+            <span>🎟️ Giảm giá (${appliedVoucher.code})</span>
+            <span>−${formatCurrency(discount)}</span>
+          </div>` : ''}
+          <div class="divider"></div>
           <div class="d-flex justify-between fw-bold">
             <span>Tổng cộng</span>
-            <span class="price">${formatCurrency(total)}</span>
+            <span class="price">${formatCurrency(final + 15000)}</span>
           </div>
         </div>`;
+      // Reset voucher khi mở modal
+      appliedVoucher = null;
+      document.getElementById('voucher-code').value = '';
+      document.getElementById('voucher-msg').style.display = 'none';
       document.getElementById('order-modal').classList.add('open');
     }
     function closeModal() { document.getElementById('order-modal').classList.remove('open'); }
+
+    // ── Voucher Logic ────────────────────────────────────────────
+    let appliedVoucher = null;
+
+    async function applyVoucher() {
+      const code = document.getElementById('voucher-code').value.trim();
+      if (!code) { showToast('Vui lòng nhập mã voucher!', 'error'); return; }
+
+      const total = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
+      const btn = document.getElementById('apply-voucher-btn');
+      btn.disabled = true; btn.textContent = '...';
+
+      const msgEl = document.getElementById('voucher-msg');
+      try {
+        const result = await voucherAPI.apply(code, total);
+        appliedVoucher = result;
+        msgEl.innerHTML = `<span style="color:#4ade80;">✅ ${result.desc} — Giảm ${formatCurrency(result.discount_amount)}</span>`;
+        msgEl.style.display = 'block';
+        // Cập nhật lại summary
+        openOrderModal();
+        showToast(`✅ Áp dụng ${result.code} thành công!`, 'success');
+      } catch (e) {
+        appliedVoucher = null;
+        msgEl.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`;
+        msgEl.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Áp dụng';
+      }
+    }
 
     async function confirmOrder() {
       const address = document.getElementById('delivery-address').value.trim();
@@ -392,7 +456,8 @@
         quantity: qty,
         unit_price: item.price,
       }));
-      const total = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
+      const subtotal = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
+      const total = appliedVoucher ? appliedVoucher.final_amount : subtotal;
 
       try {
         await ordersAPI.create({
@@ -401,9 +466,11 @@
           total_amount: total,
           delivery_address: address,
           delivery_fee: 15000,
+          voucher_code: appliedVoucher?.code || null,
+          discount_amount: appliedVoucher?.discount_amount || 0,
         });
         showToast('Đặt hàng thành công! 🎉', 'success');
-        cart = {};
+        cart = {}; appliedVoucher = null;
         renderCart();
         closeModal();
         setTimeout(() => window.location.href = 'orders.html', 1200);
@@ -424,10 +491,10 @@
         const initials = user.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
         nav.innerHTML += `
           <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
-          <div class="user-chip" onclick="logout()" style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+          <a href="profile.html" class="user-chip" style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;">
             <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;">${initials}</div>
-            <span>Đăng xuất</span>
-          </div>`;
+            <span>${user.name?.split(' ').pop()}</span>
+          </a>`;
       } else {
         nav.innerHTML += `<a href="login.html" class="btn btn-primary btn-sm">Đăng nhập</a>`;
       }

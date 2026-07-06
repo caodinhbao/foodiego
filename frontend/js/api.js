@@ -88,6 +88,24 @@ const revenueAPI = {
   getByRestaurant: (restaurantId) => apiFetch(`/restaurants/${restaurantId}/revenue`),
 };
 
+// ── Profile ────────────────────────────────────────────────────
+const profileAPI = {
+  update: (name) => apiFetch('/auth/profile', { method: 'PATCH', body: JSON.stringify({ name }) }),
+  changePassword: (currentPassword, newPassword) =>
+    apiFetch('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+};
+
+// ── Food Search ────────────────────────────────────────────────
+const searchAPI = {
+  searchFood: (q) => apiFetch(`/menu-items/search?q=${encodeURIComponent(q)}`),
+};
+
+// ── Voucher ─────────────────────────────────────────────────────
+const voucherAPI = {
+  apply: (code, total_amount) =>
+    apiFetch('/orders/apply-voucher', { method: 'POST', body: JSON.stringify({ code, total_amount }) }),
+};
+
 // ── Auth State Helpers ─────────────────────────────────────────────
 function isLoggedIn()    { return !!getToken(); }
 function isAdmin()       { return getUser()?.role === 'admin'; }

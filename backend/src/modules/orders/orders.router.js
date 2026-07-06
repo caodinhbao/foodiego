@@ -94,4 +94,44 @@ router.patch('/:id/status', authenticate, authorize('restaurant'), async (req, r
   }
 });
 
+/**
+ * POST /api/orders/apply-voucher
+ * Kiểm tra và áp dụng mã giảm giá
+ * Body: { code, total_amount }
+ */
+router.post('/apply-voucher', authenticate, authorize('customer'), async (req, res, next) => {
+  try {
+    const { code, total_amount } = req.body;
+    if (!code) return res.status(400).json({ error: 'Vui lòng nhập mã giảm giá' });
+
+    // Danh sách voucher (có thể chuyển sang DB sau)
+    const VOUCHERS = {
+      'FOODIE10': { discount: 10, type: 'percent', desc: 'Giảm 10%',       min: 50000  },
+      'FOODIE20': { discount: 20, type: 'percent', desc: 'Giảm 20%',       min: 100000 },
+      'SHIP0':    { discount: 15000, type: 'fixed', desc: 'Miễn phí giao', min: 0      },
+      'NEWUSER':  { discount: 30000, type: 'fixed', desc: 'Giảm 30.000đ',  min: 80000  },
+      'WELCOME':  { discount: 15, type: 'percent', desc: 'Giảm 15%',       min: 70000  },
+    };
+
+    const voucher = VOUCHERS[code.toUpperCase()];
+    if (!voucher) return res.status(404).json({ error: 'Mã giảm giá không hợp lệ' });
+    if (total_amount < voucher.min) {
+      return res.status(400).json({
+        error: `Đơn tối thiểu ${new Intl.NumberFormat('vi-VN').format(voucher.min)}đ để dùng mã này`
+      });
+    }
+
+    const discountAmount = voucher.type === 'percent'
+      ? Math.round(total_amount * voucher.discount / 100)
+      : voucher.discount;
+
+    return res.json({
+      code: code.toUpperCase(),
+      desc: voucher.desc,
+      discount_amount: discountAmount,
+      final_amount: Math.max(0, total_amount - discountAmount),
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

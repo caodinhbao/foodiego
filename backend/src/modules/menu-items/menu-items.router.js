@@ -73,4 +73,29 @@ routerItem.delete('/:id', authenticate, authorize('restaurant'), async (req, res
   }
 });
 
+/**
+ * GET /api/menu-items/search?q=<keyword>
+ * Tìm kiếm món ăn xuyên tất cả nhà hàng — public
+ */
+routerItem.get('/search', async (req, res, next) => {
+  try {
+    const db = require('../../config/db');
+    const q = req.query.q?.trim();
+    if (!q || q.length < 2) {
+      return res.status(400).json({ error: 'Từ khóa tìm kiếm phải có ít nhất 2 ký tự' });
+    }
+    const { rows } = await db.query(
+      `SELECT mi.id, mi.name, mi.description, mi.price, mi.is_available,
+              r.id AS restaurant_id, r.name AS restaurant_name, r.address AS restaurant_address
+       FROM menu_items mi
+       JOIN restaurants r ON r.id = mi.restaurant_id
+       WHERE mi.name LIKE ? AND mi.is_available = 1 AND r.status = 'active'
+       ORDER BY mi.name ASC
+       LIMIT 30`,
+      [`%${q}%`]
+    );
+    return res.json(rows);
+  } catch (err) { next(err); }
+});
+
 module.exports = { menuItemsByRestaurantRouter: router, menuItemsRouter: routerItem };

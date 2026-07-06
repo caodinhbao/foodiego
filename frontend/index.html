@@ -212,6 +212,12 @@
         <div id="restaurants-grid" class="grid grid-3">
           <!-- Loaded by JS -->
         </div>
+        <!-- Search Results: Food Items -->
+        <div id="food-search-results" style="display:none;margin-top:1.5rem;">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text-secondary);"
+            id="food-search-title"></h3>
+          <div id="food-results-grid" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+        </div>
       </section>
 
     </div>
@@ -229,11 +235,10 @@
           <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
           ${isRestaurant() ? '<a href="restaurant-dashboard.html" class="btn btn-primary btn-sm">🏪 Dashboard Nhà Hàng</a>' : ''}
           ${isAdmin() ? '<a href="admin.html" class="nav-link">⚙️ Admin</a>' : ''}
-          <div class="user-chip" onclick="logout()">
+          <a href="profile.html" class="user-chip">
             <div class="user-avatar">${initials}</div>
             <span>${user.name?.split(' ').pop()}</span>
-            <span class="text-muted">· Đăng xuất</span>
-          </div>
+          </a>
         `;
       } else {
         nav.innerHTML = `
@@ -297,20 +302,57 @@
       grid.innerHTML = list.map((r, i) => renderRestaurantCard(r, i)).join('');
     }
 
+    let searchTimeout = null;
     function filterRestaurants() {
-      const q = document.getElementById('search-input').value.toLowerCase().trim();
+      const q = document.getElementById('search-input').value.trim();
+
+      // Ẩn food search results
+      document.getElementById('food-search-results').style.display = 'none';
+
       if (!q) { renderGrid(allRestaurants); return; }
+
+      // Tìm nhà hàng theo tên/địa chỉ (local)
       const filtered = allRestaurants.filter(r =>
-        r.name?.toLowerCase().includes(q) ||
-        r.address?.toLowerCase().includes(q)
+        r.name?.toLowerCase().includes(q.toLowerCase()) ||
+        r.address?.toLowerCase().includes(q.toLowerCase())
       );
       renderGrid(filtered);
+
+      // Tìm món ăn (API) với debounce
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async () => {
+        if (q.length < 2) return;
+        try {
+          const foodResults = await searchAPI.searchFood(q);
+          if (foodResults.length) {
+            document.getElementById('food-search-title').textContent =
+              `🔍 Tìm thấy ${foodResults.length} món ăn cho "${q}"`;
+            document.getElementById('food-results-grid').innerHTML = foodResults.map(item => `
+              <div onclick="goToRestaurant(${item.restaurant_id})"
+                style="display:flex;align-items:center;gap:1rem;padding:1rem;
+                       background:rgba(255,255,255,0.04);border:1px solid var(--border);
+                       border-radius:var(--radius-md);cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.borderColor='rgba(255,107,53,0.4)'"
+                onmouseout="this.style.borderColor='var(--border)'">
+                <div style="font-size:1.8rem;">🍜</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:0.95rem;">${item.name}</div>
+                  <div style="font-size:0.8rem;color:var(--text-muted);">
+                    🏪 ${item.restaurant_name} · 📍 ${item.restaurant_address || ''}
+                  </div>
+                </div>
+                <div style="font-weight:700;color:var(--accent);white-space:nowrap;">
+                  ${formatCurrency(item.price)}
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">→</div>
+              </div>`).join('');
+            document.getElementById('food-search-results').style.display = 'block';
+          }
+        } catch (_) { /* silent */ }
+      }, 400);
     }
 
-    document.getElementById('search-input').addEventListener('keyup', e => {
-      if (e.key === 'Enter') filterRestaurants();
-      else filterRestaurants();
-    });
+    document.getElementById('search-input').addEventListener('keyup', () => filterRestaurants());
 
     function goToRestaurant(id) {
       window.location.href = `restaurant.html?id=${id}`;
