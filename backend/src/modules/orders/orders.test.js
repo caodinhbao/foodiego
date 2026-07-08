@@ -57,16 +57,19 @@ describe('Orders Service', () => {
   // ── createOrder ────────────────────────────────────────────────────────────
   describe('createOrder()', () => {
     it('should create an order and return it with items', async () => {
-      _db.query.mockResolvedValue({
-        rows: [
-          {
-            id: 10,
-            restaurant_id: 2,
-            price: 50000,
-            is_available: 1,
-          },
-        ],
-      });
+      _db.query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              id: 10,
+              restaurant_id: 2,
+              price: 50000,
+              is_available: 1,
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] });
 
       _axios.post.mockResolvedValue({
         data: { delivery_fee: 15000 },
@@ -75,6 +78,7 @@ describe('Orders Service', () => {
       mockConn.execute
         .mockResolvedValueOnce([{ insertId: 101 }])
         .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]) // INSERT order_status_logs
         .mockResolvedValueOnce([[
           {
             id: 101,
@@ -171,16 +175,19 @@ describe('Orders Service', () => {
 
 
     it('should use fallback delivery fee when delivery service fails', async () => {
-      _db.query.mockResolvedValue({
-        rows: [
-          {
-            id: 10,
-            restaurant_id: 2,
-            price: 50000,
-            is_available: 1,
-          },
-        ],
-      });
+      _db.query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              id: 10,
+              restaurant_id: 2,
+              price: 50000,
+              is_available: 1,
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] });
 
       _axios.post.mockRejectedValue(
         new Error('Delivery service unavailable')
@@ -189,6 +196,7 @@ describe('Orders Service', () => {
       mockConn.execute
         .mockResolvedValueOnce([{ insertId: 102 }])
         .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]) // INSERT order_status_logs
         .mockResolvedValueOnce([[
           {
             id: 102,
@@ -212,7 +220,7 @@ describe('Orders Service', () => {
       expect(mockConn.execute).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('INSERT INTO orders'),
-        [1, 2, 50000, 5000]
+        [1, 2, 50000, 5000, null]
       );
 
       expect(order.delivery_fee).toBe(5000);
@@ -401,6 +409,9 @@ describe('Orders Service', () => {
         })
         .mockResolvedValueOnce({
           rows: [],
+        })
+        .mockResolvedValueOnce({
+          rows: [], // INSERT order_status_logs
         })
         .mockResolvedValueOnce({
           rows: [

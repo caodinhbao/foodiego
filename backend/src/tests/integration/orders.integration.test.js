@@ -75,6 +75,7 @@ describe('Orders API — Integration Tests', () => {
       mockConn.execute
         .mockResolvedValueOnce([{ insertId: 101 }])
         .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]) // INSERT order_status_logs
         .mockResolvedValueOnce([[
           {
             id: 101,
@@ -293,6 +294,9 @@ describe('Orders API — Integration Tests', () => {
         })
         .mockResolvedValueOnce({
           rows: [],
+        })
+        .mockResolvedValueOnce({
+          rows: [], // INSERT order_status_logs
         })
         .mockResolvedValueOnce({
           rows: [
