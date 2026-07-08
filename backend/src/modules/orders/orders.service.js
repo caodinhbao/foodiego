@@ -1,5 +1,9 @@
 const db = require('../../config/db');
 const axios = require('axios');
+// New feature integrations (lazy require to avoid circular deps)
+const getLoyalty  = () => require('../loyalty/loyalty.router');
+const getNotify   = () => require('../notifications/notifications.router');
+const getFlash    = () => require('../flash-sales/flash-sales.router');
 
 const VALID_STATUS = ['pending', 'accepted', 'preparing', 'delivering', 'completed', 'cancelled'];
 const STATUS_TRANSITIONS = {
@@ -11,8 +15,8 @@ const STATUS_TRANSITIONS = {
   cancelled:  [],
 };
 
-const createOrder = async (customerId, data) => {
-  const { restaurant_id, items, distance_km = 3 } = data || {};
+const createOrder = async (customerId, data) => {  // Feature 1 + 4 + 6: notes, flash sales, SSE
+  const { restaurant_id, items, distance_km = 3, notes } = data || {};
 
   if (!restaurant_id || !items || !Array.isArray(items) || items.length === 0) {
     const err = new Error('restaurant_id và items (array) là bắt buộc');
@@ -73,14 +77,29 @@ const createOrder = async (customerId, data) => {
     delivery_fee = Math.max(5000, Number(distance_km) * 3000);
   }
 
+  // Feature 4: Apply flash sale discounts
+  let flashDiscount = 0;
+  for (const item of orderItems) {
+    const sale = await getFlash().getActiveSaleForItem(item.menu_item_id);
+    if (sale) {
+      const originalSubtotal = item.unit_price * item.quantity;
+      const discountedPrice = Math.round(item.unit_price * (1 - sale.discount_percent / 100));
+      item.unit_price = discountedPrice;
+      item.flash_discount = originalSubtotal - discountedPrice * item.quantity;
+      flashDiscount += item.flash_discount;
+    }
+  }
+  // Recalculate total after flash discounts
+  total_amount = orderItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+
   // Transaction
   const conn = await db.pool.getConnection();
   try {
     await conn.beginTransaction();
 
     const [orderResult] = await conn.execute(
-      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, status) VALUES (?, ?, ?, ?, \'pending\')',
-      [customerId, restaurant_id, total_amount, delivery_fee]
+      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, notes, status) VALUES (?, ?, ?, ?, ?, \'pending\')',
+      [customerId, restaurant_id, total_amount, delivery_fee, notes || null]
     );
     const orderId = orderResult.insertId;
 
@@ -90,6 +109,12 @@ const createOrder = async (customerId, data) => {
         [orderId, item.menu_item_id, item.quantity, item.unit_price]
       );
     }
+
+    // Feature 2: Log initial status
+    await conn.execute(
+      'INSERT INTO order_status_logs (order_id, status) VALUES (?, \'pending\')',
+      [orderId]
+    );
 
     await conn.commit();
 
@@ -104,6 +129,11 @@ const createOrder = async (customerId, data) => {
     );
     const order = orders[0];
     order.items = itemRows;
+    order.flash_discount = flashDiscount;
+
+    // Feature 6: SSE notify restaurant of new order
+    try { getNotify().notifyNewOrder(restaurant_id, order); } catch (_) {}
+
     return order;
   } catch (err) {
     await conn.rollback();
@@ -202,6 +232,23 @@ const updateOrderStatus = async (orderId, ownerId, newStatus) => {
   }
 
   await db.query('UPDATE orders SET status = ? WHERE id = ?', [newStatus, orderId]);
+
+  // Feature 2: Log status change to timeline
+  try {
+    await db.query(
+      'INSERT INTO order_status_logs (order_id, status) VALUES (?, ?)',
+      [orderId, newStatus]
+    );
+  } catch (_) {}
+
+  // Feature 3: Earn loyalty points when order completed
+  if (newStatus === 'completed') {
+    try {
+      const { earnPoints } = getLoyalty();
+      await earnPoints(order.customer_id, orderId, order.total_amount);
+    } catch (_) {}
+  }
+
   const { rows } = await db.query('SELECT * FROM orders WHERE id = ?', [orderId]);
   return rows[0];
 };

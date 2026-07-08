@@ -92,6 +92,51 @@
     .status-label { font-size: 0.68rem; color: var(--text-muted); text-align: center; line-height: 1.2; }
     .status-label.active { color: var(--accent); font-weight: 600; }
 
+    /* ── Loyalty Widget ─────────────────────────────────── */
+    .loyalty-widget {
+      background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(255,140,90,0.05));
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: var(--radius-lg);
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .loyalty-tier-badge {
+      padding: .35rem .9rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #ff8c5a);
+      color: #fff;
+      white-space: nowrap;
+    }
+    .loyalty-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .loyalty-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #ff8c5a);
+      border-radius: 99px;
+      transition: width 0.8s ease;
+    }
+    /* ── Notes display ──────────────────────────────────── */
+    .order-notes {
+      background: rgba(255,107,53,0.06);
+      border-left: 3px solid var(--accent);
+      padding: .5rem .8rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: .82rem;
+      color: var(--text-secondary);
+      margin: .6rem 0;
+    }
     .orders-grid { display: flex; flex-direction: column; gap: 1.2rem; }
 
     /* ── Tracking Map ───────────────────────────────────────── */
@@ -128,6 +173,18 @@
 
   <div class="page-wrapper">
     <div class="container">
+      <!-- Loyalty Widget -->
+      <div class="loyalty-widget fade-in" id="loyalty-widget" style="display:none">
+        <div>🏆</div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;">Điểm tích lũy: <span id="lp-points" style="color:var(--accent);">–</span></div>
+          <div style="font-size:.78rem;color:var(--text-muted);">Hạng: <span id="lp-tier">–</span> · Còn <span id="lp-next">–</span> điểm lên <span id="lp-next-tier">–</span></div>
+        </div>
+        <div class="loyalty-progress-bar"><div class="loyalty-progress-fill" id="lp-bar" style="width:0%"></div></div>
+        <span class="loyalty-tier-badge" id="lp-badge">–</span>
+        <button class="btn btn-ghost btn-sm" onclick="redeemPoints()">🎁 Đổi điểm</button>
+      </div>
+
       <section class="section">
         <div class="section-header fade-in">
           <h1 class="section-title">📦 Đơn hàng của tôi</h1>
@@ -196,6 +253,8 @@
 
     function renderOrderCard(order) {
       const items = order.items || [];
+      const notesHtml = order.notes ? `<div class="order-notes">📝 <strong>Ghi chú:</strong> ${order.notes}</div>` : '';
+      const pointsEarned = order.status === 'completed' ? Math.floor(Number(order.total_amount) / 1000) : 0;
       return `
         <div class="order-card fade-in">
           <div class="order-header">
@@ -206,6 +265,7 @@
             ${statusBadge(order.status)}
           </div>
           ${renderStatusBar(order.status)}
+          ${notesHtml}
           ${items.length ? `
             <div class="order-items-list">
               ${items.slice(0,3).map(i => `
@@ -216,16 +276,24 @@
               ${items.length > 3 ? `<div class="order-item-row text-muted">+${items.length-3} món khác...</div>` : ''}
             </div>` : ''}
           <div class="order-footer">
-            <div class="order-meta">📍 ${order.delivery_address || 'Chưa có địa chỉ'}</div>
-            <div class="order-total-amount">${formatCurrency(order.total_amount)}</div>
+            <div>
+              <div class="order-total-amount">${formatCurrency(order.total_amount)}</div>
+              ${pointsEarned > 0 ? `<div style="font-size:.78rem;color:#fbbf24;margin-top:.2rem;">⭐ +${pointsEarned} điểm tích lũy</div>` : ''}
+            </div>
+            <div style="display:flex;gap:.5rem;">
+              <button class="btn btn-ghost btn-sm" onclick="showTimeline(${order.id})">🗺️ Timeline</button>
+              ${order.status !== 'cancelled' ? `<button class="btn btn-primary btn-sm" onclick="toggleTracking(${order.id}, '${order.status}')">📍 Tracking</button>` : ''}
+            </div>
+          </div>
+          <!-- Timeline panel -->
+          <div class="tracking-panel" id="timeline-panel-${order.id}" style="display:none;">
+            <div id="timeline-content-${order.id}" style="display:flex;flex-direction:column;gap:.5rem;padding-top:.5rem;"></div>
           </div>
           ${order.status !== 'cancelled' ? `
-          <button class="btn btn-primary mt-2 w-100" onclick="toggleTracking(${order.id}, '${order.status}')">📍 Xem hành trình giao hàng</button>
           <div class="tracking-panel" id="tracking-panel-${order.id}">
-            <div style="font-size:0.85rem;margin-bottom:0.5rem;color:var(--text-secondary);">Bản đồ hành trình (Live Tracking):</div>
+            <div style="font-size:.85rem;margin-bottom:.5rem;color:var(--text-secondary);">Bản đồ hành trình (Live Tracking):</div>
             <div id="map-${order.id}" class="map-container"></div>
-          </div>
-          ` : ''}
+          </div>` : ''}
         </div>`;
     }
 
@@ -253,6 +321,70 @@
     }
 
     loadOrders();
+    loadLoyaltyWidget();
+
+    // ── Loyalty Points Widget ────────────────────────────────
+    async function loadLoyaltyWidget() {
+      if (!isCustomer()) return;
+      try {
+        const bal = await loyaltyAPI.getBalance();
+        document.getElementById('loyalty-widget').style.display = 'flex';
+        document.getElementById('lp-points').textContent = bal.points.toLocaleString('vi-VN');
+        document.getElementById('lp-tier').textContent = bal.tier;
+        document.getElementById('lp-badge').textContent = `🏅 ${bal.tier}`;
+        if (bal.next_tier) {
+          const left = (bal.next_tier_points - bal.points);
+          document.getElementById('lp-next').textContent = left.toLocaleString('vi-VN');
+          document.getElementById('lp-next-tier').textContent = bal.next_tier;
+          setTimeout(() => { document.getElementById('lp-bar').style.width = bal.progress_percent + '%'; }, 200);
+        } else {
+          document.getElementById('lp-next').textContent = '0';
+          document.getElementById('lp-next-tier').textContent = 'Kim cương ✨';
+          setTimeout(() => { document.getElementById('lp-bar').style.width = '100%'; }, 200);
+        }
+      } catch (_) {}
+    }
+
+    async function redeemPoints() {
+      const bal = await loyaltyAPI.getBalance().catch(() => null);
+      if (!bal || bal.points < 100) { showToast('Cần tối thiểu 100 điểm để đổi', 'error'); return; }
+      const pts = prompt(`Bạn có ${bal.points} điểm. Nhập số điểm muốn đổi (100 điểm = 10.000đ):`);
+      if (!pts) return;
+      try {
+        const r = await loyaltyAPI.redeem(Number(pts));
+        showToast(`🎁 ${r.message}`, 'success');
+        loadLoyaltyWidget();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── Order Timeline ───────────────────────────────────────
+    async function showTimeline(orderId) {
+      const panel = document.getElementById(`timeline-panel-${orderId}`);
+      const content = document.getElementById(`timeline-content-${orderId}`);
+      if (!panel) return;
+      const isVisible = panel.style.display !== 'none';
+      panel.style.display = isVisible ? 'none' : 'block';
+      if (isVisible) return;
+
+      content.innerHTML = '<div class="spinner"></div>';
+      try {
+        const data = await timelineAPI.getTimeline(orderId);
+        const STATUS_ICONS = { pending:'🕐', accepted:'✅', preparing:'👨‍🍳', delivering:'🛵', completed:'🎉', cancelled:'❌' };
+        const STATUS_LABELS = { pending:'Đặt đơn', accepted:'Đã xác nhận', preparing:'Đang nấu', delivering:'Đang giao', completed:'Hoàn thành', cancelled:'Đã hủy' };
+        content.innerHTML = data.timeline.map((step, i) => `
+          <div style="display:flex;align-items:flex-start;gap:.8rem;padding:.4rem 0;">
+            <div style="width:28px;height:28px;border-radius:50%;background:${step.status==='cancelled'?'rgba(239,68,68,.2)':'rgba(255,107,53,.2)'};border:2px solid ${step.status==='cancelled'?'#f87171':'var(--accent)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem;">${STATUS_ICONS[step.status]||'•'}</div>
+            <div style="flex:1;border-left:${i < data.timeline.length-1 ? '2px dashed rgba(255,107,53,.2)' : 'none'};padding-left:.5rem;padding-bottom:.8rem;">
+              <div style="font-weight:600;font-size:.88rem;">${STATUS_LABELS[step.status]||step.status}</div>
+              <div style="font-size:.75rem;color:var(--text-muted);">${formatDate(step.changed_at)}</div>
+            </div>
+          </div>`).join('');
+      } catch (err) {
+        content.innerHTML = `<div style="color:var(--text-muted);font-size:.85rem;">Không thể tải timeline: ${err.message}</div>`;
+      }
+    }
 
     // ── Live Tracking Logic ──────────────────────────────────────
     const maps = {}; // lưu instance của leaflet

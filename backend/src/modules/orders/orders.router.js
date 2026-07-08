@@ -95,6 +95,32 @@ router.patch('/:id/status', authenticate, authorize('restaurant'), async (req, r
 });
 
 /**
+ * GET /api/orders/:id/timeline
+ * Lịch sử trạng thái đơn — Feature 2: Order Timeline
+ */
+router.get('/:id/timeline', authenticate, async (req, res, next) => {
+  try {
+    const orderId = req.params.id;
+    // Kiểm tra order tồn tại + quyền
+    const { rows: orderRows } = await require('../../config/db').query(
+      'SELECT * FROM orders WHERE id = ?', [orderId]
+    );
+    if (!orderRows.length) return res.status(404).json({ error: 'Order not found' });
+
+    const order = orderRows[0];
+    if (req.user.role === 'customer' && order.customer_id !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { rows: logs } = await require('../../config/db').query(
+      'SELECT status, changed_at FROM order_status_logs WHERE order_id = ? ORDER BY changed_at ASC',
+      [orderId]
+    );
+    return res.json({ order_id: Number(orderId), timeline: logs });
+  } catch (err) { next(err); }
+});
+
+/**
  * POST /api/orders/apply-voucher
  * Kiểm tra và áp dụng mã giảm giá
  * Body: { code, total_amount }

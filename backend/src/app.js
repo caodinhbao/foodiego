@@ -34,6 +34,18 @@ app.use('/api/restaurants/:restaurantId/menu-items', menuItemsByRestaurantRouter
 app.use('/api/menu-items',  menuItemsRouter);
 app.use('/api/orders',      ordersRouter);
 
+// ── New Feature Routes ───────────────────────────────────────────────
+const loyaltyRouter        = require('./modules/loyalty/loyalty.router');
+const flashSalesRouter     = require('./modules/flash-sales/flash-sales.router');
+const adminAnalyticsRouter = require('./modules/admin/admin.router');
+const notificationsRouter  = require('./modules/notifications/notifications.router');
+
+app.use('/api/loyalty',        loyaltyRouter);
+app.use('/api/flash-sales',    flashSalesRouter);
+app.use('/api/admin',          adminAnalyticsRouter);
+app.use('/api/notifications',  notificationsRouter);
+
+
 // ── 404 handler (chỉ cho /api routes) ─────────────────────────────────────
 app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'Route not found' });

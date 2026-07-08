@@ -4,100 +4,106 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel — FoodieGo</title>
-  <meta name="description" content="Quản lý người dùng hệ thống FoodieGo.">
+  <meta name="description" content="Quản lý toàn diện hệ thống FoodieGo — Users, Analytics, Flash Sales.">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    .admin-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
+    .admin-tabs { display:flex; gap:0.5rem; margin-bottom:2rem; border-bottom:1px solid var(--border); padding-bottom:0; }
+    .admin-tab {
+      padding:0.7rem 1.4rem; border:none; background:none; cursor:pointer;
+      color:var(--text-muted); font-size:0.9rem; font-weight:500;
+      border-bottom:2px solid transparent; margin-bottom:-1px; transition:all var(--transition);
     }
+    .admin-tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
+    .admin-tab:hover:not(.active) { color:var(--text-primary); }
+    .tab-section { display:none; }
+    .tab-section.active { display:block; animation:fadeIn 0.25s ease; }
+
+    /* Stats Grid */
+    .stats-4 { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem; }
     .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      text-align: center;
-      transition: all var(--transition);
+      background:rgba(255,255,255,0.04); border:1px solid var(--border);
+      border-radius:var(--radius-lg); padding:1.4rem;
+      transition:all var(--transition);
     }
-    .stat-card:hover { border-color: var(--border-accent); transform: translateY(-3px); }
-    .stat-card .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-    .stat-card .stat-value { font-size: 2rem; font-weight: 800; color: var(--accent); }
-    .stat-card .stat-label { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .stat-card:hover { border-color:rgba(255,107,53,0.4); transform:translateY(-3px); }
+    .stat-card .sicon { font-size:2rem; margin-bottom:0.5rem; display:block; }
+    .stat-card .sval {
+      font-size:1.9rem; font-weight:800;
+      background:linear-gradient(135deg,#fff,var(--accent));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .stat-card .slabel { font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem; }
 
-    /* ── Table ──────────────────────────────────────────────── */
-    .table-wrap {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      overflow: hidden;
+    /* Charts */
+    .charts-grid { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+    @media(max-width:768px){.charts-grid{grid-template-columns:1fr;}}
+    .chart-card {
+      background:rgba(255,255,255,0.03); border:1px solid var(--border);
+      border-radius:var(--radius-lg); padding:1.5rem;
     }
-    .table-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .table-title { font-size: 1rem; font-weight: 700; }
-    table { width: 100%; border-collapse: collapse; }
-    th {
-      text-align: left;
-      padding: 0.75rem 1.5rem;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-    }
-    td {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-      vertical-align: middle;
-    }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
+    .chart-title { font-size:0.95rem; font-weight:700; margin-bottom:1.2rem; }
 
-    .user-cell { display: flex; align-items: center; gap: 10px; }
-    .user-avatar-sm {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #fff;
-      flex-shrink: 0;
+    /* Top tables */
+    .top-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+    @media(max-width:768px){.top-grid{grid-template-columns:1fr;}}
+    .top-card {
+      background:rgba(255,255,255,0.03); border:1px solid var(--border);
+      border-radius:var(--radius-lg); overflow:hidden;
     }
-    .user-name { font-weight: 600; }
-    .user-email { font-size: 0.8rem; color: var(--text-muted); }
-
-    .role-select-table {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      padding: 0.35rem 0.7rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-      transition: border-color var(--transition);
+    .top-card-header { padding:1rem 1.2rem; border-bottom:1px solid var(--border); font-weight:700; font-size:0.92rem; }
+    .top-item-row {
+      display:flex; align-items:center; gap:0.8rem;
+      padding:0.85rem 1.2rem; border-bottom:1px solid rgba(255,255,255,0.04);
+      transition:background var(--transition);
     }
-    .role-select-table:focus { border-color: var(--accent); }
+    .top-item-row:last-child { border-bottom:none; }
+    .top-item-row:hover { background:rgba(255,107,53,0.04); }
+    .top-rank { font-size:1rem; width:22px; text-align:center; }
+    .top-info { flex:1; }
+    .top-name { font-weight:600; font-size:0.9rem; }
+    .top-sub { font-size:0.78rem; color:var(--text-muted); }
+    .top-val { font-weight:700; color:var(--accent); font-size:0.9rem; white-space:nowrap; }
 
-    .avatar-colors { }
-    .color-customer  { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .color-restaurant{ background: linear-gradient(135deg, #ff6b35, #e0531f); }
-    .color-admin     { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    /* Users table */
+    .table-wrap { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+    .table-header { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.5rem; border-bottom:1px solid var(--border); }
+    .table-title { font-size:1rem; font-weight:700; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:0.75rem 1.2rem; font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.02); }
+    td { padding:0.9rem 1.2rem; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+    .user-cell { display:flex; align-items:center; gap:10px; }
+    .uavatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .color-c { background:linear-gradient(135deg,#3b82f6,#1d4ed8); }
+    .color-r { background:linear-gradient(135deg,#ff6b35,#e0531f); }
+    .color-a { background:linear-gradient(135deg,#8b5cf6,#6d28d9); }
+    .role-select { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); padding:.3rem .6rem; font-size:.82rem; outline:none; cursor:pointer; }
+    .role-select:focus { border-color:var(--accent); }
 
-    @media (max-width: 700px) {
-      th:nth-child(3), td:nth-child(3),
-      th:nth-child(4), td:nth-child(4) { display: none; }
+    /* Flash Sale */
+    .flash-form {
+      background:rgba(255,107,53,0.05); border:1px dashed rgba(255,107,53,0.3);
+      border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem;
     }
+    .flash-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; }
+    .flash-card {
+      background:rgba(255,255,255,0.04); border:1px solid var(--border);
+      border-radius:var(--radius-lg); padding:1.2rem; position:relative; overflow:hidden;
+    }
+    .flash-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(135deg,var(--accent),#ff8c5a); }
+    .flash-discount-badge {
+      position:absolute; top:12px; right:12px;
+      background:linear-gradient(135deg,var(--accent),#ff8c5a); color:#fff;
+      padding:.2rem .6rem; border-radius:999px; font-size:.75rem; font-weight:800;
+    }
+    .flash-item-name { font-weight:700; font-size:1rem; margin-bottom:.3rem; }
+    .flash-prices { display:flex; gap:.8rem; align-items:center; margin-top:.4rem; }
+    .flash-orig { text-decoration:line-through; color:var(--text-muted); font-size:.85rem; }
+    .flash-sale { color:var(--accent); font-weight:800; font-size:1.1rem; }
+    .flash-time { font-size:.78rem; color:var(--text-muted); margin-top:.5rem; }
+    .countdown { font-weight:700; color:var(--accent); }
   </style>
 </head>
 <body>
@@ -114,22 +120,65 @@
 
   <div class="page-wrapper">
     <div class="container">
-      <section class="section">
-        <div class="section-header fade-in">
-          <h1 class="section-title">⚙️ Admin Panel</h1>
-          <p class="section-subtitle">Quản lý người dùng và hệ thống</p>
+      <div class="section-header fade-in">
+        <h1 class="section-title">⚙️ Admin Dashboard</h1>
+        <p class="section-subtitle">Quản lý toàn diện hệ thống FoodieGo</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" id="tab-analytics" onclick="switchTab('analytics')">📊 Analytics</button>
+        <button class="admin-tab" id="tab-users" onclick="switchTab('users')">👥 Users</button>
+        <button class="admin-tab" id="tab-flash" onclick="switchTab('flash')">⚡ Flash Sales</button>
+      </div>
+
+      <!-- ── TAB: ANALYTICS ────────────────────────────── -->
+      <div class="tab-section active" id="section-analytics">
+        <div class="stats-4" id="analytics-stats">
+          <div class="stat-card"><span class="sicon">📋</span><div class="sval" id="a-total-orders">–</div><div class="slabel">Tổng đơn hàng</div></div>
+          <div class="stat-card"><span class="sicon">💰</span><div class="sval" id="a-revenue">–</div><div class="slabel">Doanh thu (hoàn thành)</div></div>
+          <div class="stat-card"><span class="sicon">👤</span><div class="sval" id="a-new-users">–</div><div class="slabel">User mới 7 ngày</div></div>
+          <div class="stat-card"><span class="sicon">🛒</span><div class="sval" id="a-new-orders">–</div><div class="slabel">Đơn mới 7 ngày</div></div>
         </div>
 
-        <!-- Stats -->
-        <div class="admin-stats fade-in" id="admin-stats">
-          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-total">–</div><div class="stat-label">Tổng người dùng</div></div>
-          <div class="stat-card"><div class="stat-icon">🧑</div><div class="stat-value" id="stat-customers">–</div><div class="stat-label">Khách hàng</div></div>
-          <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-value" id="stat-restaurants">–</div><div class="stat-label">Chủ nhà hàng</div></div>
-          <div class="stat-card"><div class="stat-icon">🛡️</div><div class="stat-value" id="stat-admins">–</div><div class="stat-label">Admin</div></div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">📈 Doanh thu 7 ngày gần nhất</div>
+            <canvas id="revenue-chart" height="120"></canvas>
+            <div id="no-revenue" style="display:none;text-align:center;padding:2rem;color:var(--text-muted);">📊 Chưa có dữ liệu</div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">🍩 Phân phối trạng thái đơn</div>
+            <canvas id="status-chart" height="180"></canvas>
+            <div id="no-status" style="display:none;text-align:center;padding:2rem;color:var(--text-muted);">Chưa có dữ liệu</div>
+          </div>
         </div>
 
-        <!-- Users Table -->
-        <div class="table-wrap fade-in fade-in-delay-2">
+        <div class="top-grid">
+          <div class="top-card">
+            <div class="top-card-header">🏆 Top 5 nhà hàng doanh thu cao nhất</div>
+            <div id="top-restaurants">
+              <div class="loading-center"><div class="spinner"></div></div>
+            </div>
+          </div>
+          <div class="top-card">
+            <div class="top-card-header">🍜 Top 5 món ăn bán chạy nhất</div>
+            <div id="top-items">
+              <div class="loading-center"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: USERS ─────────────────────────────────── -->
+      <div class="tab-section" id="section-users">
+        <div class="stats-4 fade-in" id="user-stats-cards" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><span class="sicon">👥</span><div class="sval" id="su-total">–</div><div class="slabel">Tổng người dùng</div></div>
+          <div class="stat-card"><span class="sicon">🧑</span><div class="sval" id="su-cust">–</div><div class="slabel">Khách hàng</div></div>
+          <div class="stat-card"><span class="sicon">🏪</span><div class="sval" id="su-rest">–</div><div class="slabel">Chủ nhà hàng</div></div>
+          <div class="stat-card"><span class="sicon">🛡️</span><div class="sval" id="su-admin">–</div><div class="slabel">Admin</div></div>
+        </div>
+        <div class="table-wrap fade-in">
           <div class="table-header">
             <span class="table-title">👥 Danh sách người dùng</span>
             <button class="btn btn-ghost btn-sm" onclick="loadUsers()">🔄 Làm mới</button>
@@ -138,7 +187,39 @@
             <div class="loading-center"><div class="spinner"></div><span>Đang tải...</span></div>
           </div>
         </div>
-      </section>
+      </div>
+
+      <!-- ── TAB: FLASH SALES ───────────────────────────── -->
+      <div class="tab-section" id="section-flash">
+        <div class="flash-form fade-in">
+          <h3 style="margin-bottom:1rem;font-size:1rem;">⚡ Tạo Flash Sale mới</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">ID Món ăn *</label>
+              <input type="number" id="fs-item-id" class="form-control" placeholder="VD: 1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Giảm giá (%) *</label>
+              <input type="number" id="fs-discount" class="form-control" placeholder="VD: 30" min="1" max="99">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bắt đầu *</label>
+              <input type="datetime-local" id="fs-start" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kết thúc *</label>
+              <input type="datetime-local" id="fs-end" class="form-control">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:0.5rem;" onclick="createFlashSale()">⚡ Tạo Flash Sale</button>
+        </div>
+
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">🔥 Flash Sales đang chạy</h3>
+        <div class="flash-grid" id="flash-grid">
+          <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -151,95 +232,287 @@
       const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
       document.getElementById('nav-items').innerHTML = `
         <a href="index.html" class="nav-link">🏠 Trang chủ</a>
-        <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
         <a href="admin.html" class="nav-link active">⚙️ Admin</a>
-        <div style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;" onclick="logout()">
-          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;">${initials}</div>
+        <div onclick="logout()" style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:#fff;">${initials}</div>
           <span>${user?.name?.split(' ').pop()} · Đăng xuất</span>
         </div>`;
     }
 
-    function getAvatarColor(role) {
-      return { customer: 'color-customer', restaurant: 'color-restaurant', admin: 'color-admin' }[role] || 'color-customer';
+    // ── Tab switching ─────────────────────────────────────
+    function switchTab(tab) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById(`section-${tab}`).classList.add('active');
+      if (tab === 'users') loadUsers();
+      if (tab === 'flash') loadFlashSales();
     }
 
-    async function updateRole(userId, role, selectEl) {
+    // ── ANALYTICS ────────────────────────────────────────
+    let revenueChart = null, statusChart = null;
+
+    async function loadAnalytics() {
       try {
-        selectEl.disabled = true;
-        await usersAPI.updateRole(userId, role);
-        showToast(`Đã cập nhật role thành "${role}"`, 'success');
-        loadUsers();
+        const [analytics, topRest, topItems] = await Promise.all([
+          adminAnalyticsAPI.getAnalytics(),
+          adminAnalyticsAPI.getTopRestaurants(),
+          adminAnalyticsAPI.getTopItems(),
+        ]);
+
+        // Stats
+        document.getElementById('a-total-orders').textContent = analytics.total_orders;
+        document.getElementById('a-revenue').textContent = formatCurrency(analytics.total_revenue);
+        document.getElementById('a-new-users').textContent = analytics.new_users_7d;
+        document.getElementById('a-new-orders').textContent = analytics.new_orders_7d;
+
+        // Revenue chart
+        const daily = analytics.daily_stats_7d || [];
+        if (daily.length) {
+          const labels = daily.map(d => new Date(d.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'}));
+          const revData = daily.map(d => Number(d.revenue) || 0);
+          if (revenueChart) revenueChart.destroy();
+          revenueChart = new Chart(document.getElementById('revenue-chart'), {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Doanh thu (đ)',
+                data: revData,
+                borderColor: '#ff6b35',
+                backgroundColor: 'rgba(255,107,53,0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ff6b35',
+                pointRadius: 5,
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#888', callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              }
+            }
+          });
+        } else {
+          document.getElementById('no-revenue').style.display = 'block';
+          document.getElementById('revenue-chart').style.display = 'none';
+        }
+
+        // Status donut chart
+        const byStatus = analytics.orders_by_status || [];
+        if (byStatus.length) {
+          const statusColors = {
+            pending: '#fbbf24', accepted: '#60a5fa', preparing: '#c084fc',
+            delivering: '#fb923c', completed: '#4ade80', cancelled: '#f87171'
+          };
+          const statusLabels = { pending:'Chờ xác nhận', accepted:'Đã xác nhận', preparing:'Đang nấu', delivering:'Đang giao', completed:'Hoàn thành', cancelled:'Đã hủy' };
+          if (statusChart) statusChart.destroy();
+          statusChart = new Chart(document.getElementById('status-chart'), {
+            type: 'doughnut',
+            data: {
+              labels: byStatus.map(s => statusLabels[s.status] || s.status),
+              datasets: [{
+                data: byStatus.map(s => s.count),
+                backgroundColor: byStatus.map(s => statusColors[s.status] || '#888'),
+                borderWidth: 2,
+                borderColor: '#13131a',
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { position: 'bottom', labels: { color: '#aaa', padding: 12, font: { size: 11 } } }
+              }
+            }
+          });
+        } else {
+          document.getElementById('no-status').style.display = 'block';
+          document.getElementById('status-chart').style.display = 'none';
+        }
+
+        // Top restaurants
+        const rankIcons = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+        document.getElementById('top-restaurants').innerHTML = topRest.length
+          ? topRest.map((r, i) => `
+              <div class="top-item-row">
+                <span class="top-rank">${rankIcons[i]}</span>
+                <div class="top-info">
+                  <div class="top-name">${r.name}</div>
+                  <div class="top-sub">${r.total_orders} đơn · ${r.address?.substring(0,30) || ''}</div>
+                </div>
+                <div class="top-val">${formatCurrency(r.revenue)}</div>
+              </div>`).join('')
+          : '<div style="padding:1rem;color:var(--text-muted);text-align:center;">Chưa có dữ liệu</div>';
+
+        // Top items
+        document.getElementById('top-items').innerHTML = topItems.length
+          ? topItems.map((item, i) => `
+              <div class="top-item-row">
+                <span class="top-rank">${rankIcons[i]}</span>
+                <div class="top-info">
+                  <div class="top-name">${item.name}</div>
+                  <div class="top-sub">${item.restaurant_name} · ${item.order_count} đơn</div>
+                </div>
+                <div class="top-val">${item.total_sold} món</div>
+              </div>`).join('')
+          : '<div style="padding:1rem;color:var(--text-muted);text-align:center;">Chưa có dữ liệu</div>';
+
       } catch (err) {
-        showToast('Lỗi: ' + err.message, 'error');
-        selectEl.disabled = false;
+        showToast('Lỗi tải analytics: ' + err.message, 'error');
       }
     }
 
+    // ── USERS ─────────────────────────────────────────────
     async function loadUsers() {
       try {
         const users = await usersAPI.getAll();
+        document.getElementById('su-total').textContent = users.length;
+        document.getElementById('su-cust').textContent = users.filter(u=>u.role==='customer').length;
+        document.getElementById('su-rest').textContent = users.filter(u=>u.role==='restaurant').length;
+        document.getElementById('su-admin').textContent = users.filter(u=>u.role==='admin').length;
 
-        // Stats
-        document.getElementById('stat-total').textContent = users.length;
-        document.getElementById('stat-customers').textContent = users.filter(u=>u.role==='customer').length;
-        document.getElementById('stat-restaurants').textContent = users.filter(u=>u.role==='restaurant').length;
-        document.getElementById('stat-admins').textContent = users.filter(u=>u.role==='admin').length;
-
-        // Table
-        const currentUser = getUser();
+        const me = getUser();
         document.getElementById('users-table-wrap').innerHTML = `
           <table>
-            <thead>
-              <tr>
-                <th>Người dùng</th>
-                <th>Role hiện tại</th>
-                <th>Ngày tạo</th>
-                <th>Cập nhật role</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Người dùng</th><th>Role</th><th>Ngày tạo</th><th>Cập nhật role</th></tr></thead>
             <tbody>
               ${users.map(u => {
-                const initials = u.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
-                const colorClass = getAvatarColor(u.role);
-                const isMe = u.id === currentUser?.id;
-                return `
-                  <tr>
-                    <td>
-                      <div class="user-cell">
-                        <div class="user-avatar-sm ${colorClass}">${initials}</div>
-                        <div>
-                          <div class="user-name">${u.name} ${isMe ? '<span class="badge badge-admin" style="font-size:0.65rem;">Bạn</span>' : ''}</div>
-                          <div class="user-email">${u.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td><span class="badge badge-${u.role}">${{ customer:'🧑 Khách hàng', restaurant:'🏪 Chủ nhà hàng', admin:'🛡️ Admin' }[u.role] || u.role}</span></td>
-                    <td class="text-muted">${formatDate(u.created_at)}</td>
-                    <td>
-                      ${isMe ? '<span class="text-muted" style="font-size:0.82rem;">Không thể đổi</span>' : `
-                        <select class="role-select-table" id="role-${u.id}" onchange="updateRole(${u.id}, this.value, this)">
-                          <option value="customer" ${u.role==='customer'?'selected':''}>🧑 Khách hàng</option>
-                          <option value="restaurant" ${u.role==='restaurant'?'selected':''}>🏪 Chủ nhà hàng</option>
-                          <option value="admin" ${u.role==='admin'?'selected':''}>🛡️ Admin</option>
-                        </select>`}
-                    </td>
-                  </tr>`;
+                const init = u.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+                const colorCls = {customer:'color-c',restaurant:'color-r',admin:'color-a'}[u.role]||'color-c';
+                const isMe = u.id === me?.id;
+                const roleLabels = { customer:'🧑 Khách hàng', restaurant:'🏪 Nhà hàng', admin:'🛡️ Admin' };
+                return `<tr>
+                  <td><div class="user-cell"><div class="uavatar ${colorCls}">${init}</div><div>
+                    <div style="font-weight:600;">${u.name} ${isMe ? '<span style="font-size:.7rem;padding:.1rem .4rem;background:rgba(255,107,53,.2);border-radius:4px;color:var(--accent);">Bạn</span>' : ''}</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);">${u.email}</div>
+                  </div></div></td>
+                  <td><span class="badge badge-${u.role}">${roleLabels[u.role]||u.role}</span></td>
+                  <td style="color:var(--text-muted);">${formatDate(u.created_at)}</td>
+                  <td>${isMe ? '<span style="font-size:.8rem;color:var(--text-muted);">—</span>' : `
+                    <select class="role-select" onchange="updateRole(${u.id},this.value,this)">
+                      <option value="customer" ${u.role==='customer'?'selected':''}>Khách hàng</option>
+                      <option value="restaurant" ${u.role==='restaurant'?'selected':''}>Nhà hàng</option>
+                      <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                    </select>`}</td>
+                </tr>`;
               }).join('')}
             </tbody>
           </table>`;
       } catch (err) {
-        document.getElementById('users-table-wrap').innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">⚠️</div>
-            <h3>Lỗi tải dữ liệu</h3>
-            <p>${err.message}</p>
-            <button class="btn btn-primary mt-2" onclick="loadUsers()">Thử lại</button>
-          </div>`;
+        showToast('Lỗi tải users: ' + err.message, 'error');
       }
     }
 
+    async function updateRole(userId, role, el) {
+      try {
+        el.disabled = true;
+        await usersAPI.updateRole(userId, role);
+        showToast(`✅ Đã đổi role thành "${role}"`, 'success');
+        loadUsers();
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
+        el.disabled = false;
+      }
+    }
+
+    // ── FLASH SALES ──────────────────────────────────────
+    async function loadFlashSales() {
+      try {
+        const sales = await flashSalesAPI.getActive();
+        const grid = document.getElementById('flash-grid');
+        if (!sales.length) {
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
+            <div style="font-size:3rem;">⚡</div><p>Chưa có Flash Sale nào đang chạy</p></div>`;
+          return;
+        }
+        grid.innerHTML = sales.map(s => {
+          const endTime = new Date(s.end_time);
+          return `<div class="flash-card">
+            <span class="flash-discount-badge">-${s.discount_percent}%</span>
+            <div class="flash-item-name">🍜 ${s.item_name}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">🏪 ${s.restaurant_name}</div>
+            <div class="flash-prices">
+              <span class="flash-orig">${formatCurrency(s.original_price)}</span>
+              <span class="flash-sale">${formatCurrency(s.sale_price)}</span>
+            </div>
+            <div class="flash-time">⏰ Kết thúc: ${endTime.toLocaleString('vi-VN')}
+              <span class="countdown" id="cd-${s.id}"></span>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:.8rem;color:#f87171;border-color:rgba(239,68,68,.3);"
+              onclick="deleteFlashSale(${s.id})">🗑️ Xóa</button>
+          </div>`;
+        }).join('');
+
+        // Countdown timers
+        sales.forEach(s => {
+          const endTime = new Date(s.end_time).getTime();
+          const update = () => {
+            const el = document.getElementById(`cd-${s.id}`);
+            if (!el) return;
+            const diff = endTime - Date.now();
+            if (diff <= 0) { el.textContent = ' (Đã hết)'; return; }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const sec = Math.floor((diff % 60000) / 1000);
+            el.textContent = ` (còn ${h}g ${m}p ${sec}s)`;
+          };
+          update();
+          setInterval(update, 1000);
+        });
+      } catch (err) {
+        showToast('Lỗi tải flash sales: ' + err.message, 'error');
+      }
+    }
+
+    async function createFlashSale() {
+      const menuItemId = document.getElementById('fs-item-id').value;
+      const discount = document.getElementById('fs-discount').value;
+      const start = document.getElementById('fs-start').value;
+      const end = document.getElementById('fs-end').value;
+      if (!menuItemId || !discount || !start || !end) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error'); return;
+      }
+      try {
+        await flashSalesAPI.create({
+          menu_item_id: Number(menuItemId),
+          discount_percent: Number(discount),
+          start_time: new Date(start).toISOString(),
+          end_time: new Date(end).toISOString(),
+        });
+        showToast('⚡ Tạo Flash Sale thành công!', 'success');
+        ['fs-item-id','fs-discount','fs-start','fs-end'].forEach(id => document.getElementById(id).value = '');
+        loadFlashSales();
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
+      }
+    }
+
+    async function deleteFlashSale(id) {
+      try {
+        await flashSalesAPI.delete(id);
+        showToast('Đã xóa Flash Sale', 'success');
+        loadFlashSales();
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
+      }
+    }
+
+    // ── Set default datetime for flash sale form ──────────
+    function setDefaultDatetimes() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      document.getElementById('fs-start').value = fmt(now);
+      const later = new Date(now.getTime() + 3 * 3600000);
+      document.getElementById('fs-end').value = fmt(later);
+    }
+
     renderNav();
-    loadUsers();
+    loadAnalytics();
+    setDefaultDatetimes();
   </script>
 </body>
 </html>

@@ -159,3 +159,44 @@ function requireAdmin() {
   if (!isLoggedIn() || !isAdmin()) { window.location.href = 'index.html'; return false; }
   return true;
 }
+
+// ── Loyalty Points ──────────────────────────────────────────────────
+const loyaltyAPI = {
+  getBalance: () => apiFetch('/loyalty/balance'),
+  getHistory: () => apiFetch('/loyalty/history'),
+  redeem: (points) => apiFetch('/loyalty/redeem', { method: 'POST', body: JSON.stringify({ points }) }),
+};
+
+// ── Flash Sales ─────────────────────────────────────────────────────
+const flashSalesAPI = {
+  getActive: () => apiFetch('/flash-sales/active'),
+  getForItem: (menuItemId) => apiFetch(`/flash-sales/item/${menuItemId}`),
+  create: (data) => apiFetch('/flash-sales', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/flash-sales/${id}`, { method: 'DELETE' }),
+};
+
+// ── Admin Analytics ─────────────────────────────────────────────────
+const adminAnalyticsAPI = {
+  getAnalytics:      () => apiFetch('/admin/analytics'),
+  getTopRestaurants: () => apiFetch('/admin/top-restaurants'),
+  getTopItems:       () => apiFetch('/admin/top-items'),
+  getUsersStats:     () => apiFetch('/admin/users-stats'),
+};
+
+// ── Order Timeline ──────────────────────────────────────────────────
+const timelineAPI = {
+  getTimeline: (orderId) => apiFetch(`/orders/${orderId}/timeline`),
+};
+
+// ── SSE Notifications helper ────────────────────────────────────────
+function connectOrderNotifications(restaurantId, onNewOrder) {
+  const token = getToken();
+  const url = `${API_BASE}/notifications/stream?restaurant_id=${restaurantId}`;
+  const evtSource = new EventSource(url + `&token=${token}`);
+  evtSource.addEventListener('new_order', (e) => {
+    try { onNewOrder(JSON.parse(e.data)); } catch (_) {}
+  });
+  evtSource.onerror = () => { /* auto-reconnect */ };
+  return evtSource;
+}
+

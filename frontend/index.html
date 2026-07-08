@@ -192,6 +192,22 @@
         </div>
       </section>
 
+      <!-- Flash Sale Banner -->
+      <section class="fade-in" id="flash-sale-banner" style="display:none;margin-bottom:1.5rem;">
+        <div style="background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,140,90,.08));border:1px solid rgba(255,107,53,.4);border-radius:var(--radius-lg);padding:1rem 1.5rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <span style="font-size:1.5rem;">⚡</span>
+              <div>
+                <div style="font-weight:800;font-size:1rem;">Flash Sale đang diễn ra!</div>
+                <div style="font-size:.82rem;color:var(--text-muted);">Ưu đãi có thời hạn — Đặt ngay trước khi hết!</div>
+              </div>
+            </div>
+            <div id="flash-deals-mini" style="display:flex;gap:.6rem;flex-wrap:wrap;"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- Search -->
       <section class="search-section fade-in fade-in-delay-1">
         <div class="search-bar">
@@ -409,6 +425,41 @@
     }
 
     loadPage();
+    loadFlashSaleBanner();
+
+    // ── Flash Sale Banner ─────────────────────────────────────────
+    async function loadFlashSaleBanner() {
+      try {
+        const sales = await flashSalesAPI.getActive();
+        if (!sales.length) return;
+        document.getElementById('flash-sale-banner').style.display = 'block';
+        const mini = document.getElementById('flash-deals-mini');
+        mini.innerHTML = sales.slice(0,3).map(s => {
+          const endMs = new Date(s.end_time).getTime();
+          return `<div style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.35);border-radius:var(--radius);padding:.4rem .8rem;font-size:.82rem;cursor:pointer;" onclick="goToRestaurant(${s.restaurant_id})">
+            <span style="font-weight:800;color:var(--accent);">-${s.discount_percent}%</span>
+            <span style="margin-left:.3rem;">${s.item_name}</span>
+            <span style="display:block;font-size:.72rem;color:var(--text-muted);" id="cd-home-${s.id}"></span>
+          </div>`;
+        }).join('');
+        // Countdown
+        sales.slice(0,3).forEach(s => {
+          const end = new Date(s.end_time).getTime();
+          const tick = () => {
+            const el = document.getElementById(`cd-home-${s.id}`);
+            if (!el) return;
+            const diff = end - Date.now();
+            if (diff <= 0) { el.textContent = 'Đã hết'; return; }
+            const h = Math.floor(diff/3600000);
+            const m = Math.floor((diff%3600000)/60000);
+            const sec = Math.floor((diff%60000)/1000);
+            el.textContent = `còn ${h}g ${m}p ${sec}s`;
+          };
+          tick(); setInterval(tick, 1000);
+        });
+      } catch (_) {}
+    }
+
 
     // ── AI FoodieBot Logic ──────────────────────────────────────────
     function toggleAIChat() {
