@@ -9,6 +9,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME     || 'foodiego_db',
   waitForConnections: true,
   connectionLimit: 10,
+  charset: 'utf8mb4',
 });
 
 /**

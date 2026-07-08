@@ -9,6 +9,7 @@ const mysql = require('mysql2/promise');
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME     || 'foodiego_db',
     multipleStatements: true,
+    charset:  'utf8mb4',
   });
 
   // Xóa dữ liệu liên quan trước (FK)

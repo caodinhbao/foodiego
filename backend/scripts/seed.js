@@ -17,6 +17,7 @@ async function seed() {
     password:          process.env.DB_PASSWORD || '',
     database:          process.env.DB_NAME     || 'foodiego_db',
     multipleStatements: true,
+    charset:           'utf8mb4',
   });
 
   console.log('✅ Kết nối database thành công');
