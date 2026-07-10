@@ -3,11 +3,12 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files trước để cache layer
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm ci --only=production
 
 # Copy source code
-COPY src/ ./src/
+COPY backend/src/ ./src/
+COPY frontend/ /frontend/
 
 EXPOSE 3000
 

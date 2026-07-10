@@ -217,12 +217,46 @@
           <div id="voucher-msg" style="margin-top:0.4rem;font-size:0.82rem;display:none;"></div>
         </div>
 
+        <!-- Payment Method -->
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label class="form-label">Phương thức thanh toán</label>
+          <div style="display:flex; gap:1.5rem; margin-top:0.3rem;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <input type="radio" name="payment_method" value="cash" checked> 💵 Tiền mặt
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <input type="radio" name="payment_method" value="transfer"> 💳 Chuyển khoản (Ngân hàng ảo)
+            </label>
+          </div>
+        </div>
+
         </div>
         <div id="order-summary" style="margin-top:1rem;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal()">Hủy</button>
         <button class="btn btn-primary" id="confirm-order-btn" onclick="confirmOrder()">🚀 Đặt hàng ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Modal -->
+  <div class="modal-overlay" id="bank-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">🏦 Ngân hàng ảo FoodieBank</h3>
+        <button class="modal-close" onclick="closeBankModal()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding: 2rem 1rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
+        <h4>Chuyển khoản thanh toán đơn hàng</h4>
+        <p style="color:var(--text-secondary); margin-top:0.5rem;">Số tiền cần thanh toán:</p>
+        <div id="bank-amount" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin: 1rem 0;">0 ₫</div>
+        <p style="font-size: 0.85rem; color:var(--text-muted);">Vui lòng nhấn nút bên dưới để mô phỏng chuyển khoản thành công.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeBankModal()">Hủy</button>
+        <button class="btn btn-primary" id="confirm-bank-btn" onclick="processBankTransfer()">✅ Xác nhận chuyển khoản</button>
       </div>
     </div>
   </div>
@@ -447,9 +481,41 @@
       const address = document.getElementById('delivery-address').value.trim();
       if (!address) { showToast('Vui lòng nhập địa chỉ giao hàng!', 'error'); return; }
 
-      const btn = document.getElementById('confirm-order-btn');
+      const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+      const subtotal = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
+      const total = appliedVoucher ? appliedVoucher.final_amount : subtotal;
+      const finalAmount = total + 15000; // + delivery fee
+
+      if (paymentMethod === 'transfer') {
+        closeModal();
+        document.getElementById('bank-amount').textContent = formatCurrency(finalAmount);
+        document.getElementById('bank-modal').classList.add('open');
+        return;
+      }
+
+      await executeOrder(address, 'cash', 'pending');
+    }
+
+    function closeBankModal() {
+      document.getElementById('bank-modal').classList.remove('open');
+    }
+
+    async function processBankTransfer() {
+      const btn = document.getElementById('confirm-bank-btn');
       btn.disabled = true;
-      btn.textContent = 'Đang đặt hàng...';
+      btn.textContent = 'Đang xử lý...';
+      setTimeout(async () => {
+        const address = document.getElementById('delivery-address').value.trim();
+        await executeOrder(address, 'transfer', 'paid');
+        closeBankModal();
+        btn.disabled = false;
+        btn.textContent = '✅ Xác nhận chuyển khoản';
+      }, 1500);
+    }
+
+    async function executeOrder(address, payment_method, payment_status) {
+      const btn = document.getElementById('confirm-order-btn');
+      if(btn) { btn.disabled = true; btn.textContent = 'Đang đặt hàng...'; }
 
       const orderItems = Object.values(cart).map(({ item, qty }) => ({
         menu_item_id: item.id,
@@ -468,6 +534,8 @@
           delivery_fee: 15000,
           voucher_code: appliedVoucher?.code || null,
           discount_amount: appliedVoucher?.discount_amount || 0,
+          payment_method,
+          payment_status,
         });
         showToast('Đặt hàng thành công! 🎉', 'success');
         cart = {}; appliedVoucher = null;
@@ -476,9 +544,7 @@
         setTimeout(() => window.location.href = 'orders.html', 1200);
       } catch (err) {
         showToast(err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '🚀 Đặt hàng ngay';
+        if(btn) { btn.disabled = false; btn.textContent = '🚀 Đặt hàng ngay'; }
       }
     }
 
@@ -538,7 +604,10 @@
             <h4>${item.name}</h4>
             <p>${item.description || 'Món ăn đặc sắc của nhà hàng'}</p>
             <div class="menu-item-footer">
-              <span class="price">${formatCurrency(item.price)}</span>
+              <span class="price">
+                ${item.original_price ? `<span style="text-decoration:line-through; color:var(--text-muted); font-size: 0.8rem; margin-right: 0.5rem">${formatCurrency(item.original_price)}</span>` : ''}
+                ${formatCurrency(item.price)}
+              </span>
             </div>
           </div>
           <button class="add-btn" onclick='addToCart(${JSON.stringify(item)})' ${!item.is_available ? 'disabled title="Hết hàng"' : ''}>

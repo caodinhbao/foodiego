@@ -35,10 +35,21 @@ const createMenuItem = async (restaurantId, ownerId, data) => {
 
 const getMenuByRestaurant = async (restaurantId) => {
   const { rows } = await db.query(
-    'SELECT * FROM menu_items WHERE restaurant_id = ? AND is_available = 1 ORDER BY created_at DESC',
+    `SELECT mi.*, fs.discount_percent
+     FROM menu_items mi
+     LEFT JOIN flash_sales fs ON mi.id = fs.menu_item_id
+        AND fs.start_time <= NOW() AND fs.end_time >= NOW()
+     WHERE mi.restaurant_id = ? AND mi.is_available = 1
+     ORDER BY mi.created_at DESC`,
     [restaurantId]
   );
-  return rows;
+  return rows.map(r => {
+    if (r.discount_percent) {
+      r.original_price = r.price;
+      r.price = Math.round(Number(r.price) * (1 - r.discount_percent / 100));
+    }
+    return r;
+  });
 };
 
 const updateMenuItem = async (id, ownerId, data) => {

@@ -1,21 +1,22 @@
 version: '3.9'
 
 services:
-  # ── PostgreSQL ─────────────────────────────────────────────────────────────
-  postgres:
-    image: postgres:15-alpine
+  # ── MySQL ──────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
     container_name: foodiego_db
     environment:
-      POSTGRES_USER: foodiego
-      POSTGRES_PASSWORD: foodiego123
-      POSTGRES_DB: foodiego_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: foodiego_db
     ports:
-      - '5432:5432'
+      - '3306:3306'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - mysql_data:/var/lib/mysql
+      - ./backend/migrations/001_init_mysql.sql:/docker-entrypoint-initdb.d/001_init_mysql.sql
+      - ./backend/migrations/002_mysql.sql:/docker-entrypoint-initdb.d/002_mysql.sql
+      - ./backend/migrations/003_new_features.sql:/docker-entrypoint-initdb.d/003_new_features.sql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U foodiego -d foodiego_db']
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,12 +24,16 @@ services:
   # ── Backend (Node.js + Express) ────────────────────────────────────────────
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: foodiego_backend
     environment:
       PORT: 3000
-      DATABASE_URL: postgresql://foodiego:foodiego123@postgres:5432/foodiego_db
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: foodiego_db
       JWT_SECRET: super_secret_change_in_prod
       JWT_EXPIRES_IN: 7d
       DELIVERY_SERVICE_URL: http://delivery-service:8000
@@ -36,7 +41,7 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
     restart: on-failure
 
@@ -51,4 +56,4 @@ services:
     restart: on-failure
 
 volumes:
-  postgres_data:
+  mysql_data:

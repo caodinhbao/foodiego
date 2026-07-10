@@ -1,6 +1,6 @@
 # 🍜 FoodieGo — Hệ thống đặt món trực tuyến
 
-> **Đồ án môn SPQM** | Level 2 | Node.js + PostgreSQL + FastAPI + Docker  
+> **Đồ án môn SPQM** | Level 2 | Node.js + MySQL + FastAPI + Docker  
 > Trọng tâm: **LEAN + Lead Time + Measurement**
 
 ---
@@ -30,7 +30,7 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
 | Thành phần | Công nghệ |
 |-----------|-----------|
 | Backend chính | Node.js + Express |
-| Database | PostgreSQL |
+| Database | MySQL |
 | Auth | JWT + Role-based Authorization |
 | Service phụ | Python FastAPI (tính phí giao hàng) |
 | Test | Jest + Supertest |
@@ -68,7 +68,7 @@ Sau khi khởi động:
 |---------|-----|
 | Backend API | http://localhost:3000 |
 | Delivery Fee Service | http://localhost:8000 |
-| PostgreSQL | localhost:5432 |
+| MySQL | localhost:3306 |
 
 ### Chạy backend riêng (development)
 

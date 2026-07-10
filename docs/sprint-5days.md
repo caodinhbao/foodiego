@@ -40,10 +40,10 @@
 ### 🟢 Thành viên B
 | Thời gian | Task | Output |
 |-----------|------|--------|
-| Sáng | Viết `docker-compose.yml` (backend + PostgreSQL + delivery-service) | `docker-compose up` chạy được |
+| Sáng | Viết `docker-compose.yml` (backend + MySQL + delivery-service) | `docker-compose up` chạy được |
 | Sáng | Viết `backend/Dockerfile` | Image build thành công |
 | Chiều | Viết schema SQL đầy đủ (`migrations/001_init.sql`) gồm 6 bảng: users, restaurants, menu_items, orders, order_items, reviews | File SQL chạy được trên Postgres |
-| Chiều | Viết `src/config/db.js` (kết nối PostgreSQL với `pg` pool) | Backend kết nối DB thành công |
+| Chiều | Viết `src/config/db.js` (kết nối MySQL với `mysql2/promise` pool) | Backend kết nối DB thành công |
 
 ### 🟡 Thành viên C
 | Thời gian | Task | Output |

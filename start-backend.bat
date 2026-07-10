@@ -10,11 +10,6 @@ echo   FoodieGo Backend - Khoi dong...
 echo  ===========================================
 echo.
 
-REM Thêm PostgreSQL vào PATH
-set PG_PATH=C:\Program Files\PostgreSQL\17\bin
-if not exist "%PG_PATH%\psql.exe" set PG_PATH=C:\Program Files\PostgreSQL\16\bin
-if not exist "%PG_PATH%\psql.exe" set PG_PATH=C:\Program Files\PostgreSQL\15\bin
-set PATH=%PG_PATH%;%PATH%
 
 cd /d "%~dp0backend"
 
