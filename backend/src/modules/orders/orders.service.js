@@ -16,7 +16,7 @@ const STATUS_TRANSITIONS = {
 };
 
 const createOrder = async (customerId, data) => {  // Feature 1 + 4 + 6: notes, flash sales, SSE
-  const { restaurant_id, items, distance_km = 3, notes } = data || {};
+  const { restaurant_id, items, distance_km = 3, notes, voucher_code, payment_method = 'cash', payment_status = 'pending' } = data || {};
 
   if (!restaurant_id || !items || !Array.isArray(items) || items.length === 0) {
     const err = new Error('restaurant_id và items (array) là bắt buộc');
@@ -92,14 +92,35 @@ const createOrder = async (customerId, data) => {  // Feature 1 + 4 + 6: notes, 
   // Recalculate total after flash discounts
   total_amount = orderItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
 
+  // Apply Voucher
+  let voucherDiscount = 0;
+  let validVoucherCode = null;
+  if (voucher_code) {
+    const VOUCHERS = {
+      'FOODIE10': { discount: 10, type: 'percent', min: 50000 },
+      'FOODIE20': { discount: 20, type: 'percent', min: 100000 },
+      'SHIP0':    { discount: 15000, type: 'fixed', min: 0 },
+      'NEWUSER':  { discount: 30000, type: 'fixed', min: 80000 },
+      'WELCOME':  { discount: 15, type: 'percent', min: 70000 },
+    };
+    const voucher = VOUCHERS[voucher_code.toUpperCase()];
+    if (voucher && total_amount >= voucher.min) {
+      validVoucherCode = voucher_code.toUpperCase();
+      voucherDiscount = voucher.type === 'percent'
+        ? Math.round(total_amount * voucher.discount / 100)
+        : voucher.discount;
+    }
+  }
+  total_amount = Math.max(0, total_amount - voucherDiscount);
+
   // Transaction
   const conn = await db.pool.getConnection();
   try {
     await conn.beginTransaction();
 
     const [orderResult] = await conn.execute(
-      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, notes, status) VALUES (?, ?, ?, ?, ?, \'pending\')',
-      [customerId, restaurant_id, total_amount, delivery_fee, notes || null]
+      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, voucher_code, discount_amount, notes, status, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, \'pending\', ?, ?)',
+      [customerId, restaurant_id, total_amount, delivery_fee, validVoucherCode, voucherDiscount, notes || null, payment_method, payment_status]
     );
     const orderId = orderResult.insertId;
 

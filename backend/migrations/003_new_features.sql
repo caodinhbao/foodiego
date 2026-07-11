@@ -45,3 +45,12 @@ CREATE TABLE IF NOT EXISTS flash_sales (
 );
 CREATE INDEX IF NOT EXISTS idx_flash_sales_item ON flash_sales(menu_item_id);
 CREATE INDEX IF NOT EXISTS idx_flash_sales_time ON flash_sales(start_time, end_time);
+
+-- ── Feature 5: Vouchers ─────────────────────────────────────
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS voucher_code VARCHAR(50) DEFAULT NULL AFTER delivery_fee;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER voucher_code;
+
+-- ── Feature 6: Payments ─────────────────────────────────────
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) NOT NULL DEFAULT 'cash' AFTER status;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) NOT NULL DEFAULT 'pending' AFTER payment_method;
+

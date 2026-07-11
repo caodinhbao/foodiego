@@ -1,7 +1,7 @@
 {
   "name": "foodiego-backend",
   "version": "1.0.0",
-  "description": "FoodieGo Backend API — Node.js + Express + PostgreSQL",
+  "description": "FoodieGo Backend API — Node.js + Express + MySQL",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

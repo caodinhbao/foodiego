@@ -381,8 +381,8 @@ Therefore, the total estimated budget required to complete the FoodieGo project 
 |------|------------|-------|------------|---------------------|
 | Requirements Definition | The team does not have a clear agreement on functional requirements, leading to scope misalignment. | H | M | Conduct requirement clarification meetings; document and confirm requirements officially before each Sprint. |
 | Schedule Estimation | Planning and execution time are not accurately estimated, leading to delays. | M | M | Create a detailed plan with effort estimates, update the schedule regularly via GitHub Projects. |
-| Programming Experience | Team members are not familiar with technologies such as Node.js, FastAPI, or PostgreSQL. | M | M | Organize internal training sessions; pair less experienced members with experienced ones; study documentation early. |
-| Database Management | Errors in PostgreSQL design could lead to data loss or low performance. | H | M | Design a clear database schema, perform regular backups, and test thoroughly via Docker. |
+| Programming Experience | Team members are not familiar with technologies such as Node.js, FastAPI, or MySQL. | M | M | Organize internal training sessions; pair less experienced members with experienced ones; study documentation early. |
+| Database Management | Errors in MySQL design could lead to data loss or low performance. | H | M | Design a clear database schema, perform regular backups, and test thoroughly via Docker. |
 | Testing and Quality Assurance | Lack of sufficient testing could cause bugs in the production environment. | H | M | Write Jest unit/integration tests with coverage ≥ 80%; integrate SonarQube for code quality checks. |
 | Network / Hosting Infrastructure | Unstable hosting or limited bandwidth could slow down or interrupt the system. | M | L | Choose a reliable hosting service; use Docker for consistent deployment environments. |
 | Security | Vulnerabilities such as SQL Injection or weak JWT handling due to insecure coding. | H | M | Follow secure coding standards; validate all inputs; use HTTPS; enforce JWT expiration policies. |
