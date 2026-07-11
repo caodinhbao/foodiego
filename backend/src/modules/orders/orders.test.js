@@ -220,7 +220,7 @@ describe('Orders Service', () => {
       expect(mockConn.execute).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('INSERT INTO orders'),
-        [1, 2, 50000, 5000, null]
+        [1, 2, 50000, 5000, null, 0, null, 'cash', 'pending']
       );
 
       expect(order.delivery_fee).toBe(5000);

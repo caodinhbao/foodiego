@@ -50,6 +50,10 @@ async function seed() {
     ['Phúc Long Tea',    'phuclong@restaurant.com',      hash, 'restaurant'],
     ['Cà Phê Muối',      'caphemuoi@restaurant.com',     hash, 'restaurant'],
     ['Ăn Vặt Cô Tám',    'anvat@restaurant.com',         hash, 'restaurant'],
+    ['Sushi Sakura',     'sushi.sakura@restaurant.com',  hash, 'restaurant'],
+    ['K-Pub BBQ',        'kpub@restaurant.com',          hash, 'restaurant'],
+    ['Hải Sản D9',       'haisan.d9@restaurant.com',     hash, 'restaurant'],
+    ['Burger Lab',       'burger.lab@restaurant.com',    hash, 'restaurant'],
   ];
 
   for (const [name, email, password_hash, role] of users) {
@@ -69,6 +73,10 @@ async function seed() {
     [9, 'Phúc Long Tea & Coffee', '120 Trần Hưng Đạo, Q.1, TP.HCM',       '0901112223', 'active'],
     [10, 'Cà Phê Muối Chú Long',  '15 Lê Lợi, Q.1, TP.HCM',               '0901112224', 'active'],
     [11, 'Ăn Vặt Cô Tám',         '99 Sư Vạn Hạnh, Q.10, TP.HCM',         '0901112225', 'active'],
+    [12, 'Sushi Sakura Nhật Bản',  '24 Ngô Văn Năm, Q.1, TP.HCM',          '0902223331', 'active'],
+    [13, 'K-Pub BBQ Hàn Quốc',     '134 Nguyễn Tri Phương, Q.5, TP.HCM',   '0902223332', 'active'],
+    [14, 'Hải Sản Tươi Sống D9',   '45 Đường số 9, Q.7, TP.HCM',           '0902223333', 'active'],
+    [15, 'Burger & Grill Lab',     '78 Thảo Điền, Q.2, TP.HCM',            '0902223334', 'active'],
   ];
 
   for (const [owner_id, name, address, phone, status] of restaurants) {
@@ -115,6 +123,30 @@ async function seed() {
     [7, 'Bánh Tráng Trộn',   'Bánh tráng trộn bò khô trứng cút',               25000, 1],
     [7, 'Cá Viên Chiên',     'Cá viên, bò viên, xúc xích chiên giòn',          35000, 1],
     [7, 'Trà Chanh',         'Trà chanh giã tay giải khát',                    15000, 1],
+    // Restaurant 8: Sushi Sakura
+    [8, 'Combo Sushi Premium', 'Set sushi 12 miếng gồm cá hồi, cá trích, lươn nhật, tôm đỏ', 249000, 1],
+    [8, 'Sashimi Cá Hồi Sakura', '5 lát sashimi cá hồi tươi sống nhập khẩu Na Uy', 125000, 1],
+    [8, 'Mì Udon Bò', 'Mì udon sợi dai kết hợp thịt bò Mỹ sốt đặc trưng', 89000, 1],
+    [8, 'Cơm Cuốn Cali', 'Cơm cuốn bơ, thanh cua, trứng tôm', 75000, 1],
+    [8, 'Trà Xanh Nhật Bản', 'Trà xanh Matcha đá lạnh không đường', 20000, 1],
+    // Restaurant 9: K-Pub BBQ
+    [9, 'Ba Chỉ Bò Mỹ Sốt K-Pub', '200g ba chỉ bò cuộn nướng sốt cay Hàn Quốc', 159000, 1],
+    [9, 'Sườn Heo Sốt Galbi', 'Sườn heo nướng tẩm gia vị Galbi truyền thống', 189000, 1],
+    [9, 'Cơm Trộn Đất Đá', 'Cơm trộn thịt bò, trứng lòng đào, rau củ và sốt gochujang', 85000, 1],
+    [9, 'Canh Kim Chi Sườn Bò', 'Canh kim chi nóng hổi đậm đà', 79000, 1],
+    [9, 'Rượu Soju Truyền Thống', 'Rượu soju truyền thống thơm ngon', 65000, 1],
+    // Restaurant 10: Hải Sản D9
+    [10, 'Lẩu Thái Hải Sản', 'Lẩu thái tôm mực chua cay cho 2-3 người ăn', 299000, 1],
+    [10, 'Cua Sốt Ớt Singapore', 'Cua thịt chắc ngọt sốt ớt cay nồng đậm đà', 350000, 1],
+    [10, 'Ốc Hương Rang Muối Ớt', 'Ốc hương tươi sống rang muối cay mặn', 120000, 1],
+    [10, 'Mực Trứng Hấp Hành Gừng', 'Mực tươi ngon ngọt hấp gừng ấm nồng', 150000, 1],
+    [10, 'Bia Sài Gòn Chill', 'Bia lon ướp lạnh sảng khoái', 20000, 1],
+    // Restaurant 11: Burger Lab
+    [11, 'Signature Double Beef Burger', '2 lớp bò Mỹ nướng lò, phô mai Cheddar tan chảy, sốt BBQ độc quyền', 119000, 1],
+    [11, 'Crispy Chicken Burger', 'Ức gà chiên giòn, xà lách, sốt mayonnaise tỏi', 89000, 1],
+    [11, 'Khoai Tây Chiên Phô Mai', 'Khoai tây múi cau chiên giòn lắc bột phô mai', 45000, 1],
+    [11, 'Cánh Gà Buffalo', '6 cánh gà chiên giòn lắc sốt trâu cay ngọt', 85000, 1],
+    [11, 'Coca-Cola Zero', 'Nước ngọt không đường mát lạnh', 15000, 1],
   ];
 
   for (const [restaurant_id, name, description, price, is_available] of menuItems) {
