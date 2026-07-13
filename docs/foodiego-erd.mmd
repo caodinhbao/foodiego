@@ -1,0 +1,105 @@
+erDiagram
+    users {
+        INT id PK
+        VARCHAR name
+        VARCHAR email
+        VARCHAR password_hash
+        ENUM role "customer | restaurant | admin"
+        TIMESTAMP created_at
+    }
+
+    restaurants {
+        INT id PK
+        INT owner_id FK
+        VARCHAR name
+        TEXT address
+        VARCHAR phone
+        ENUM status "active | inactive | pending"
+        TIMESTAMP created_at
+    }
+
+    menu_items {
+        INT id PK
+        INT restaurant_id FK
+        VARCHAR name
+        TEXT description
+        DECIMAL price
+        TINYINT is_available
+        TIMESTAMP created_at
+    }
+
+    orders {
+        INT id PK
+        INT customer_id FK
+        INT restaurant_id FK
+        DECIMAL total_amount
+        DECIMAL delivery_fee
+        VARCHAR voucher_code
+        DECIMAL discount_amount
+        TEXT notes
+        ENUM status "pending | accepted | preparing | delivering | completed | cancelled"
+        VARCHAR payment_method
+        VARCHAR payment_status
+        TIMESTAMP created_at
+    }
+
+    order_items {
+        INT id PK
+        INT order_id FK
+        INT menu_item_id FK
+        INT quantity
+        DECIMAL unit_price
+    }
+
+    reviews {
+        INT id PK
+        INT customer_id FK
+        INT restaurant_id FK
+        TINYINT rating
+        TEXT comment
+        TIMESTAMP created_at
+    }
+
+    order_status_logs {
+        INT id PK
+        INT order_id FK
+        ENUM status
+        DATETIME changed_at
+    }
+
+    loyalty_points {
+        INT id PK
+        INT customer_id FK
+        INT order_id FK "nullable"
+        INT points
+        VARCHAR description
+        DATETIME created_at
+    }
+
+    flash_sales {
+        INT id PK
+        INT menu_item_id FK
+        TINYINT discount_percent
+        DATETIME start_time
+        DATETIME end_time
+        INT created_by FK
+        DATETIME created_at
+    }
+
+    %% Relationships
+    users ||--o{ restaurants : "owns (owner)"
+    users ||--o{ orders : "places (customer)"
+    users ||--o{ reviews : "writes (customer)"
+    users ||--o{ loyalty_points : "earns/redeems"
+    users ||--o{ flash_sales : "creates (admin)"
+
+    restaurants ||--o{ menu_items : "has"
+    restaurants ||--o{ orders : "receives"
+    restaurants ||--o{ reviews : "receives"
+
+    menu_items ||--o{ order_items : "included in"
+    menu_items ||--o{ flash_sales : "on sale"
+
+    orders ||--o{ order_items : "contains"
+    orders ||--o{ order_status_logs : "tracks"
+    orders ||--o| loyalty_points : "generates/uses"

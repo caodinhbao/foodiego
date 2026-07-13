@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hồ sơ cá nhân — FoodieGo</title>
+  <meta name="description" content="Xem và chỉnh sửa thông tin tài khoản FoodieGo của bạn.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .profile-layout {
+      max-width: 680px;
+      margin: 2rem auto;
+      padding: 0 1rem 4rem;
+    }
+    .profile-hero {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      margin-bottom: 1.5rem;
+    }
+    .profile-avatar-lg {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; color: white;
+      flex-shrink: 0;
+      box-shadow: 0 0 30px rgba(255,107,53,0.4);
+    }
+    .profile-info h2 { font-size: 1.4rem; font-weight: 800; }
+    .profile-info p  { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
+    .role-tag {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      background: rgba(255,107,53,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(255,107,53,0.3);
+    }
+    .profile-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      margin-bottom: 1.2rem;
+    }
+    .profile-card h3 {
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .divider { height: 1px; background: var(--border); margin: 1.2rem 0; }
+    .info-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0;
+    }
+    .info-row label { color: var(--text-muted); font-size: 0.85rem; }
+    .info-row span  { font-weight: 600; font-size: 0.9rem; }
+    .member-since { color: var(--text-muted); font-size: 0.78rem; text-align: center; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">🍜</span>
+      Foodie<span>Go</span>
+    </a>
+    <div class="navbar-nav" id="nav-items"></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="profile-layout">
+
+      <!-- Hero Card -->
+      <div class="profile-hero fade-in">
+        <div class="profile-avatar-lg" id="profile-avatar">?</div>
+        <div class="profile-info">
+          <h2 id="profile-name-display">...</h2>
+          <p id="profile-email-display">...</p>
+          <div class="role-tag" id="profile-role-display">...</div>
+        </div>
+      </div>
+
+      <!-- Thông tin & Sửa tên -->
+      <div class="profile-card fade-in">
+        <h3>👤 Thông tin cá nhân</h3>
+
+        <div class="info-row">
+          <label>Email</label>
+          <span id="info-email">—</span>
+        </div>
+        <div class="info-row">
+          <label>Vai trò</label>
+          <span id="info-role">—</span>
+        </div>
+        <div class="info-row">
+          <label>Thành viên từ</label>
+          <span id="info-joined">—</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="margin-bottom:1rem;">✏️ Cập nhật tên</h3>
+        <div class="form-group">
+          <label class="form-label" for="edit-name">Tên hiển thị</label>
+          <input type="text" id="edit-name" class="form-control" placeholder="Nhập tên mới...">
+        </div>
+        <button class="btn btn-primary" onclick="updateName()" style="margin-top:0.5rem;">
+          💾 Lưu tên mới
+        </button>
+      </div>
+
+      <!-- Đổi mật khẩu -->
+      <div class="profile-card fade-in">
+        <h3>🔒 Đổi mật khẩu</h3>
+        <div class="form-group">
+          <label class="form-label" for="current-pass">Mật khẩu hiện tại</label>
+          <input type="password" id="current-pass" class="form-control" placeholder="Nhập mật khẩu cũ...">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-pass">Mật khẩu mới</label>
+          <input type="password" id="new-pass" class="form-control" placeholder="Tối thiểu 6 ký tự">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirm-pass">Xác nhận mật khẩu mới</label>
+          <input type="password" id="confirm-pass" class="form-control" placeholder="Nhập lại mật khẩu mới">
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+          <button class="btn btn-primary" onclick="changePassword()">🔑 Đổi mật khẩu</button>
+          <button class="btn btn-ghost" onclick="clearPasswordForm()">Xóa</button>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="profile-card fade-in">
+        <h3>⚡ Truy cập nhanh</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+          <a href="orders.html" class="btn btn-ghost">📦 Đơn hàng của tôi</a>
+          <a href="index.html" class="btn btn-ghost">🍽️ Đặt món ngay</a>
+          <div id="restaurant-btn-wrap"></div>
+        </div>
+        <div class="divider"></div>
+        <button class="btn btn-ghost" onclick="logout()" style="color:#f87171;width:100%;">
+          🚪 Đăng xuất
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // ── Auth guard ────────────────────────────────────────
+    if (!isLoggedIn()) window.location.href = 'login.html';
+
+    // ── Navbar ────────────────────────────────────────────
+    function renderNav() {
+      const nav = document.getElementById('nav-items');
+      const user = getUser();
+      const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+      nav.innerHTML = `
+        <a href="index.html" class="nav-link">🏠 Trang chủ</a>
+        <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
+        <div class="user-chip">
+          <div class="user-avatar">${initials}</div>
+          <span>${user?.name?.split(' ').pop() || 'Tôi'}</span>
+        </div>`;
+    }
+
+    // ── Load profile ──────────────────────────────────────
+    async function loadProfile() {
+      try {
+        const user = await authAPI.getProfile();
+        // Cập nhật localStorage
+        setUser(user);
+
+        const initials = user.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+        document.getElementById('profile-avatar').textContent         = initials;
+        document.getElementById('profile-name-display').textContent   = user.name;
+        document.getElementById('profile-email-display').textContent  = user.email;
+        document.getElementById('info-email').textContent             = user.email;
+        document.getElementById('edit-name').value                    = user.name;
+
+        const roles = { customer: '🛍️ Khách hàng', restaurant: '🏪 Nhà hàng', admin: '⚙️ Quản trị viên' };
+        document.getElementById('profile-role-display').textContent = roles[user.role] || user.role;
+        document.getElementById('info-role').textContent            = roles[user.role] || user.role;
+
+        if (user.created_at) {
+          document.getElementById('info-joined').textContent = new Date(user.created_at)
+            .toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        // Quick action cho restaurant
+        if (isRestaurant()) {
+          document.getElementById('restaurant-btn-wrap').innerHTML =
+            `<a href="restaurant-dashboard.html" class="btn btn-primary">🏪 Dashboard Nhà Hàng</a>`;
+        }
+        if (isAdmin()) {
+          document.getElementById('restaurant-btn-wrap').innerHTML =
+            `<a href="admin.html" class="btn btn-primary">⚙️ Trang Admin</a>`;
+        }
+
+        renderNav();
+      } catch (e) {
+        showToast('Không thể tải thông tin', 'error');
+      }
+    }
+
+    // ── Update name ───────────────────────────────────────
+    async function updateName() {
+      const name = document.getElementById('edit-name').value.trim();
+      if (!name) { showToast('Vui lòng nhập tên', 'error'); return; }
+      try {
+        const updated = await profileAPI.update(name);
+        setUser(updated);
+        document.getElementById('profile-name-display').textContent = updated.name;
+        showToast('✅ Đã cập nhật tên!', 'success');
+      } catch (e) {
+        showToast(e.message || 'Cập nhật thất bại', 'error');
+      }
+    }
+
+    // ── Change password ───────────────────────────────────
+    async function changePassword() {
+      const curr    = document.getElementById('current-pass').value;
+      const newPass = document.getElementById('new-pass').value;
+      const confirm = document.getElementById('confirm-pass').value;
+
+      if (!curr || !newPass || !confirm) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error'); return;
+      }
+      if (newPass !== confirm) {
+        showToast('Mật khẩu xác nhận không khớp!', 'error'); return;
+      }
+      if (newPass.length < 6) {
+        showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'error'); return;
+      }
+      try {
+        await profileAPI.changePassword(curr, newPass);
+        showToast('✅ Đổi mật khẩu thành công!', 'success');
+        clearPasswordForm();
+      } catch (e) {
+        showToast(e.message || 'Đổi mật khẩu thất bại', 'error');
+      }
+    }
+
+    function clearPasswordForm() {
+      ['current-pass','new-pass','confirm-pass'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

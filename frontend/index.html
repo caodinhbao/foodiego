@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodieGo — Đặt món ngon, giao tận nơi</title>
+  <meta name="description" content="FoodieGo - Khám phá hàng trăm nhà hàng, đặt món yêu thích và nhận giao hàng tận nơi.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 5rem 0 3rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.4rem 1rem;
+      background: rgba(255,107,53,0.12);
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 0%, #ff8c5a 60%, #ff6b35 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto 2rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--accent); display: block; }
+    .stat-label { font-size: 0.82rem; color: var(--text-muted); }
+
+    /* ── Search Bar ───────────────────────────────────────────── */
+    .search-section { padding: 0 0 2rem; }
+    .search-bar {
+      display: flex;
+      gap: 0;
+      max-width: 560px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 0.9rem 1.2rem;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    #search-input::placeholder { color: var(--text-muted); }
+    .search-btn {
+      background: var(--accent);
+      border: none;
+      padding: 0.9rem 1.4rem;
+      color: #fff;
+      font-size: 1.1rem;
+      transition: background var(--transition);
+    }
+    .search-btn:hover { background: var(--accent-light); }
+
+    /* ── Restaurant Card ──────────────────────────────────────── */
+    .restaurant-card {
+      cursor: pointer;
+      position: relative;
+    }
+    .restaurant-card .card-img-wrap {
+      position: relative;
+      overflow: hidden;
+      height: 180px;
+    }
+    .restaurant-card .card-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .restaurant-card:hover .card-img-wrap img { transform: scale(1.06); }
+    .restaurant-card .status-dot {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+    }
+    .status-dot.open  { background: rgba(34,197,94,0.85);  color: #fff; }
+    .status-dot.closed{ background: rgba(239,68,68,0.85);  color: #fff; }
+    .restaurant-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .restaurant-meta span { font-size: 0.8rem; color: var(--text-muted); }
+    .restaurant-meta .sep { color: var(--border); }
+
+    /* ── Navbar user menu ─────────────────────────────────────── */
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.4rem 0.9rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+    .user-chip:hover { border-color: var(--accent); }
+    .user-avatar {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">🍜</span>
+      Foodie<span>Go</span>
+    </a>
+    <div class="navbar-nav" id="nav-items">
+      <!-- Injected by JS -->
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="hero fade-in">
+        <div class="hero-badge">🔥 Hơn 100+ món ăn hấp dẫn</div>
+        <h1>Đặt Món Ngon<br>Giao Tận Nơi</h1>
+        <p>Khám phá hàng trăm nhà hàng, lựa chọn món yêu thích và nhận hàng nhanh chóng tại cửa nhà bạn.</p>
+        <div class="hero-actions">
+          <a href="#restaurants" class="btn btn-primary btn-lg">🍽️ Xem nhà hàng</a>
+          <a href="orders.html" class="btn btn-ghost btn-lg" id="my-orders-btn">📦 Đơn của tôi</a>
+          <a href="restaurant-dashboard.html" class="btn btn-ghost btn-lg" id="restaurant-dash-btn" style="display:none">🏪 Quản lý nhà hàng</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item"><span class="stat-value" id="stat-restaurants">–</span><span class="stat-label">Nhà hàng</span></div>
+          <div class="stat-item"><span class="stat-value">500+</span><span class="stat-label">Món ăn</span></div>
+          <div class="stat-item"><span class="stat-value">30'</span><span class="stat-label">Giao hàng trung bình</span></div>
+        </div>
+      </section>
+
+      <!-- Flash Sale Banner -->
+      <section class="fade-in" id="flash-sale-banner" style="display:none;margin-bottom:1.5rem;">
+        <div style="background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,140,90,.08));border:1px solid rgba(255,107,53,.4);border-radius:var(--radius-lg);padding:1rem 1.5rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <span style="font-size:1.5rem;">⚡</span>
+              <div>
+                <div style="font-weight:800;font-size:1rem;">Flash Sale đang diễn ra!</div>
+                <div style="font-size:.82rem;color:var(--text-muted);">Ưu đãi có thời hạn — Đặt ngay trước khi hết!</div>
+              </div>
+            </div>
+            <div id="flash-deals-mini" style="display:flex;gap:.6rem;flex-wrap:wrap;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search -->
+      <section class="search-section fade-in fade-in-delay-1">
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="🔍  Tìm nhà hàng theo tên, địa chỉ...">
+          <button class="search-btn" onclick="filterRestaurants()">🔍</button>
+        </div>
+      </section>
+
+      <!-- Restaurants Grid -->
+      <section class="section fade-in fade-in-delay-2" id="restaurants">
+        <div class="section-header d-flex justify-between align-center">
+          <div>
+            <h2 class="section-title">Nhà hàng nổi bật</h2>
+            <p class="section-subtitle">Khám phá các nhà hàng đang hoạt động</p>
+          </div>
+          <span id="restaurant-count" class="text-muted" style="font-size:0.85rem;"></span>
+        </div>
+        <div id="restaurants-grid" class="grid grid-3">
+          <!-- Loaded by JS -->
+        </div>
+        <!-- Search Results: Food Items -->
+        <div id="food-search-results" style="display:none;margin-top:1.5rem;">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text-secondary);"
+            id="food-search-title"></h3>
+          <div id="food-results-grid" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- AI FoodieBot Widget -->
+  <button class="ai-bot-btn" id="ai-bot-btn" onclick="toggleAIChat()">🤖</button>
+
+  <div class="ai-chat-window" id="ai-chat-window">
+    <div class="ai-chat-header">
+      <div class="ai-chat-title">✨ FoodieBot AI</div>
+      <button class="ai-chat-close" onclick="toggleAIChat()">✕</button>
+    </div>
+    <div class="ai-chat-body" id="ai-chat-body">
+      <div class="ai-msg bot">
+        Chào bạn! Mình là FoodieBot. Hôm nay bạn muốn ăn gì? Mình có thể tìm món theo khẩu vị hoặc mức giá nhé! 😋
+      </div>
+    </div>
+    <div class="ai-chat-input-area">
+      <input type="text" class="ai-input" id="ai-input" placeholder="Gõ: 'Thèm đồ cay' hoặc 'Dưới 50k'..." onkeypress="handleAIKeypress(event)">
+      <button class="ai-send-btn" onclick="sendAIMessage()">➤</button>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // ── Navbar ──────────────────────────────────────────────────
+    function renderNav() {
+      const nav = document.getElementById('nav-items');
+      if (isLoggedIn()) {
+        const user = getUser();
+        const initials = user.name?.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() || '?';
+        nav.innerHTML = `
+          <a href="orders.html" class="nav-link">📦 Đơn hàng</a>
+          ${isRestaurant() ? '<a href="restaurant-dashboard.html" class="btn btn-primary btn-sm">🏪 Dashboard Nhà Hàng</a>' : ''}
+          ${isAdmin() ? '<a href="admin.html" class="nav-link">⚙️ Admin</a>' : ''}
+          <a href="profile.html" class="user-chip">
+            <div class="user-avatar">${initials}</div>
+            <span>${user.name?.split(' ').pop()}</span>
+          </a>
+        `;
+      } else {
+        nav.innerHTML = `
+          <a href="login.html" class="btn btn-ghost btn-sm">Đăng nhập</a>
+          <a href="login.html" class="btn btn-primary btn-sm">Đăng ký</a>
+        `;
+      }
+    }
+
+
+    // ── Restaurant Cards ─────────────────────────────────────────
+    const PLACEHOLDER_IMGS = [
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80',
+      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80',
+      'https://images.unsplash.com/photo-1484659619207-9165d119dafe?w=400&q=80',
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80',
+      'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&q=80',
+      'https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=400&q=80',
+    ];
+
+    let allRestaurants = [];
+
+    function renderRestaurantCard(r, idx) {
+      const img = PLACEHOLDER_IMGS[idx % PLACEHOLDER_IMGS.length];
+      const isOpen = r.status !== 'closed';
+      return `
+        <div class="card restaurant-card fade-in" onclick="goToRestaurant(${r.id})">
+          <div class="card-img-wrap">
+            <img src="${img}" alt="${r.name}" loading="lazy">
+            <span class="status-dot ${isOpen ? 'open' : 'closed'}">${isOpen ? '🟢 Mở cửa' : '🔴 Đóng cửa'}</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">${r.name}</h3>
+            <p class="card-text" style="margin-bottom:0.6rem;">📍 ${r.address || 'TP. Hồ Chí Minh'}</p>
+            <div class="restaurant-meta">
+              <span>📞 ${r.phone || 'N/A'}</span>
+              <span class="sep">•</span>
+              <span>⏱️ 25–40 phút</span>
+              <span class="sep">•</span>
+              <span>⭐ 4.${Math.floor(Math.random()*5)+3}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGrid(list) {
+      const grid = document.getElementById('restaurants-grid');
+      const count = document.getElementById('restaurant-count');
+      if (!list.length) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">🍽️</div>
+            <h3>Không tìm thấy nhà hàng</h3>
+            <p>Thử tìm kiếm với từ khóa khác</p>
+          </div>`;
+        count.textContent = '';
+        return;
+      }
+      count.textContent = `${list.length} nhà hàng`;
+      grid.innerHTML = list.map((r, i) => renderRestaurantCard(r, i)).join('');
+    }
+
+    let searchTimeout = null;
+    function filterRestaurants() {
+      const q = document.getElementById('search-input').value.trim();
+
+      // Ẩn food search results
+      document.getElementById('food-search-results').style.display = 'none';
+
+      if (!q) { renderGrid(allRestaurants); return; }
+
+      // Tìm nhà hàng theo tên/địa chỉ (local)
+      const filtered = allRestaurants.filter(r =>
+        r.name?.toLowerCase().includes(q.toLowerCase()) ||
+        r.address?.toLowerCase().includes(q.toLowerCase())
+      );
+      renderGrid(filtered);
+
+      // Tìm món ăn (API) với debounce
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async () => {
+        if (q.length < 2) return;
+        try {
+          const foodResults = await searchAPI.searchFood(q);
+          if (foodResults.length) {
+            document.getElementById('food-search-title').textContent =
+              `🔍 Tìm thấy ${foodResults.length} món ăn cho "${q}"`;
+            document.getElementById('food-results-grid').innerHTML = foodResults.map(item => `
+              <div onclick="goToRestaurant(${item.restaurant_id})"
+                style="display:flex;align-items:center;gap:1rem;padding:1rem;
+                       background:rgba(255,255,255,0.04);border:1px solid var(--border);
+                       border-radius:var(--radius-md);cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.borderColor='rgba(255,107,53,0.4)'"
+                onmouseout="this.style.borderColor='var(--border)'">
+                <div style="font-size:1.8rem;">🍜</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:0.95rem;">${item.name}</div>
+                  <div style="font-size:0.8rem;color:var(--text-muted);">
+                    🏪 ${item.restaurant_name} · 📍 ${item.restaurant_address || ''}
+                  </div>
+                </div>
+                <div style="font-weight:700;color:var(--accent);white-space:nowrap;">
+                  ${formatCurrency(item.price)}
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">→</div>
+              </div>`).join('');
+            document.getElementById('food-search-results').style.display = 'block';
+          }
+        } catch (_) { /* silent */ }
+      }, 400);
+    }
+
+    document.getElementById('search-input').addEventListener('keyup', () => filterRestaurants());
+
+    function goToRestaurant(id) {
+      window.location.href = `restaurant.html?id=${id}`;
+    }
+
+    // ── Load Data ────────────────────────────────────────────────
+    async function loadPage() {
+      renderNav();
+
+      // Hiện button phù hợp theo role
+      if (isRestaurant()) {
+        document.getElementById('restaurant-dash-btn').style.display = '';
+        document.getElementById('my-orders-btn').style.display = 'none';
+      } else if (!isLoggedIn()) {
+        document.getElementById('my-orders-btn').style.display = 'none';
+      }
+
+      const grid = document.getElementById('restaurants-grid');
+      grid.innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div><span>Đang tải nhà hàng...</span></div>`;
+
+      try {
+        allRestaurants = await restaurantsAPI.getAll();
+        document.getElementById('stat-restaurants').textContent = allRestaurants.length + '+';
+        renderGrid(allRestaurants);
+      } catch (err) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">⚠️</div>
+            <h3>Không thể kết nối backend</h3>
+            <p>Kiểm tra backend đang chạy tại <strong>http://localhost:3000</strong></p>
+            <button class="btn btn-primary mt-2" onclick="loadPage()">Thử lại</button>
+          </div>`;
+        showToast('Không kết nối được backend!', 'error');
+      }
+    }
+
+    loadPage();
+    loadFlashSaleBanner();
+
+    // ── Flash Sale Banner ─────────────────────────────────────────
+    async function loadFlashSaleBanner() {
+      try {
+        const sales = await flashSalesAPI.getActive();
+        if (!sales.length) return;
+        document.getElementById('flash-sale-banner').style.display = 'block';
+        const mini = document.getElementById('flash-deals-mini');
+        mini.innerHTML = sales.slice(0,3).map(s => {
+          const endMs = new Date(s.end_time).getTime();
+          return `<div style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.35);border-radius:var(--radius);padding:.4rem .8rem;font-size:.82rem;cursor:pointer;" onclick="goToRestaurant(${s.restaurant_id})">
+            <span style="font-weight:800;color:var(--accent);">-${s.discount_percent}%</span>
+            <span style="margin-left:.3rem;">${s.item_name}</span>
+            <span style="display:block;font-size:.72rem;color:var(--text-muted);" id="cd-home-${s.id}"></span>
+          </div>`;
+        }).join('');
+        // Countdown
+        sales.slice(0,3).forEach(s => {
+          const end = new Date(s.end_time).getTime();
+          const tick = () => {
+            const el = document.getElementById(`cd-home-${s.id}`);
+            if (!el) return;
+            const diff = end - Date.now();
+            if (diff <= 0) { el.textContent = 'Đã hết'; return; }
+            const h = Math.floor(diff/3600000);
+            const m = Math.floor((diff%3600000)/60000);
+            const sec = Math.floor((diff%60000)/1000);
+            el.textContent = `còn ${h}g ${m}p ${sec}s`;
+          };
+          tick(); setInterval(tick, 1000);
+        });
+      } catch (_) {}
+    }
+
+
+    // ── AI FoodieBot Logic ──────────────────────────────────────────
+    function toggleAIChat() {
+      document.getElementById('ai-chat-window').classList.toggle('active');
+    }
+
+    function handleAIKeypress(e) {
+      if (e.key === 'Enter') sendAIMessage();
+    }
+
+    function addChatMsg(text, sender, isHtml = false) {
+      const body = document.getElementById('ai-chat-body');
+      const msg = document.createElement('div');
+      msg.className = `ai-msg ${sender}`;
+      if (isHtml) msg.innerHTML = text;
+      else msg.textContent = text;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function showTyping() {
+      const body = document.getElementById('ai-chat-body');
+      const msg = document.createElement('div');
+      msg.className = 'ai-msg bot';
+      msg.id = 'typing-indicator';
+      msg.innerHTML = `<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function removeTyping() {
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
+    }
+
+    async function sendAIMessage() {
+      const input = document.getElementById('ai-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      addChatMsg(text, 'user');
+      showTyping();
+
+      // Giả lập độ trễ AI suy nghĩ
+      setTimeout(() => {
+        removeTyping();
+        processAIResponse(text.toLowerCase());
+      }, 1200 + Math.random() * 800);
+    }
+
+    function processAIResponse(query) {
+      const foodDb = [
+        { id: 1, name: 'Gà rán giòn rụm', price: 45000, tags: ['chiên', 'gà', 'rẻ', 'fastfood', 'gà rán'], img: PLACEHOLDER_IMGS[0], resId: 1 },
+        { id: 2, name: 'Salad gà nướng', price: 65000, tags: ['healthy', 'salad', 'giảm cân', 'nhẹ nhàng', 'rau'], img: PLACEHOLDER_IMGS[1], resId: 1 },
+        { id: 3, name: 'Mì cay hải sản', price: 55000, tags: ['cay', 'nóng', 'hải sản', 'mì', 'mì cay'], img: PLACEHOLDER_IMGS[2], resId: 2 },
+        { id: 4, name: 'Trà sữa trân châu', price: 30000, tags: ['ngọt', 'trà sữa', 'uống', 'rẻ', 'trà'], img: PLACEHOLDER_IMGS[3], resId: 3 },
+        { id: 5, name: 'Bún bò Huế', price: 50000, tags: ['bún', 'bò', 'nước', 'cay', 'bún bò'], img: PLACEHOLDER_IMGS[4], resId: 4 },
+        { id: 6, name: 'Phở bò tái nạm', price: 55000, tags: ['phở', 'bò', 'nước', 'truyền thống', 'phở bò'], img: PLACEHOLDER_IMGS[5], resId: 5 },
+        { id: 7, name: 'Cơm tấm sườn bì', price: 40000, tags: ['cơm', 'cơm tấm', 'sườn', 'no'], img: PLACEHOLDER_IMGS[0], resId: 6 },
+        { id: 8, name: 'Bánh mì thịt nướng', price: 25000, tags: ['bánh mì', 'rẻ', 'nhanh', 'thịt nướng'], img: PLACEHOLDER_IMGS[1], resId: 7 },
+        { id: 9, name: 'Trà Sữa Phúc Long', price: 50000, tags: ['trà sữa', 'phúc long', 'uống', 'ngọt'], img: PLACEHOLDER_IMGS[2], resId: 5 },
+        { id: 10, name: 'Cà Phê Muối', price: 25000, tags: ['cà phê', 'uống', 'tỉnh táo', 'cafe'], img: PLACEHOLDER_IMGS[3], resId: 6 },
+        { id: 11, name: 'Bánh Tráng Trộn', price: 25000, tags: ['bánh tráng', 'ăn vặt', 'cay', 'rẻ'], img: PLACEHOLDER_IMGS[4], resId: 7 },
+        { id: 12, name: 'Cá Viên Chiên', price: 35000, tags: ['cá viên', 'chiên', 'ăn vặt', 'rẻ'], img: PLACEHOLDER_IMGS[5], resId: 7 },
+        { id: 13, name: 'Combo Sushi Premium', price: 249000, tags: ['sushi', 'cá hồi', 'nhật', 'sashimi', 'premium'], img: PLACEHOLDER_IMGS[0], resId: 8 },
+        { id: 14, name: 'Ba Chỉ Bò Mỹ Sốt K-Pub', price: 159000, tags: ['nướng', 'bbq', 'thịt nướng', 'bò', 'korea'], img: PLACEHOLDER_IMGS[1], resId: 9 },
+        { id: 15, name: 'Lẩu Thái Hải Sản', price: 299000, tags: ['hải sản', 'lẩu', 'cua', 'ốc', 'tươi sống'], img: PLACEHOLDER_IMGS[2], resId: 10 },
+        { id: 16, name: 'Signature Double Beef Burger', price: 119000, tags: ['burger', 'bò', 'fastfood', 'khoai tây', 'gà rán'], img: PLACEHOLDER_IMGS[3], resId: 11 }
+      ];
+
+      let match = null;
+      let replyText = "";
+
+      // Basic greeting check
+      if (query === 'chào' || query === 'hi' || query === 'hello' || query === 'chào bot') {
+        addChatMsg("Chào bạn! Mình có thể giúp bạn tìm món ăn gì hôm nay?", 'bot');
+        return;
+      }
+
+      // Exact direct matching based on food tags
+      const matchedFoods = foodDb.filter(f => 
+        f.tags.some(tag => query.includes(tag))
+      );
+
+      if (matchedFoods.length > 0) {
+        match = matchedFoods[0]; // pick the first match
+        replyText = `Mình thấy bạn nhắc đến món này. Mình gợi ý **${match.name}** rất hợp với bạn nè! Thử ngay nhé 🥰:`;
+      } 
+      // Rule-based matching fallback for generic intents
+      else if (query.includes('rẻ') || query.includes('dưới 50') || query.includes('sinh viên')) {
+        match = foodDb.find(f => f.price <= 50000);
+        replyText = "Hàng ngon bổ rẻ dưới 50k đây! Đảm bảo no bụng mà không mỏng ví 😉:";
+      } else if (query.includes('giảm cân') || query.includes('healthy') || query.includes('ốm') || query.includes('nhẹ')) {
+        match = foodDb.find(f => f.tags.includes('healthy'));
+        replyText = "Ăn nhẹ nhàng, thanh đạm mà vẫn đủ chất thì chọn ngay món này nhé 🥗:";
+      } else if (query.includes('cà phê') || query.includes('cafe') || query.includes('buồn ngủ') || query.includes('tỉnh táo')) {
+        match = foodDb.find(f => f.tags.includes('cà phê'));
+        replyText = "Cần tỉnh táo thì làm ngay ly Cà phê đậm đà này nhé ☕:";
+      } else if (query.includes('ăn vặt') || query.includes('lai rai') || query.includes('bánh tráng') || query.includes('chiên')) {
+        match = foodDb.find(f => f.tags.includes('ăn vặt'));
+        replyText = "Lai rai ăn vặt thì món này là số dách luôn! Nhâm nhi bao ghiền 🍢:";
+      } else if (query.includes('ngọt') || query.includes('khát') || query.includes('nước') || query.includes('trà sữa')) {
+        match = foodDb.find(f => f.tags.includes('uống') || f.tags.includes('trà sữa'));
+        replyText = "Nạp tí đường cho đời thêm tươi vui nào 🧋:";
+      } else {
+        // No match found
+        replyText = "Xin lỗi bạn, hiện tại FoodieBot không tìm thấy món nào liên quan đến yêu cầu này. Bạn thử tìm các món như **Trà sữa, Ăn vặt, Cà phê hay Phở** xem sao nhé! 😅";
+        addChatMsg(replyText, 'bot', true);
+        return; // Early return, don't show card
+      }
+
+      if (match) {
+        const cardHtml = `
+          ${replyText}
+          <a href="restaurant.html?id=${match.resId}" class="ai-food-card">
+            <img src="${match.img}" class="ai-food-img">
+            <div class="ai-food-info">
+              <div class="ai-food-name">${match.name}</div>
+              <div class="ai-food-price">${formatCurrency(match.price)}</div>
+            </div>
+          </a>
+        `;
+        addChatMsg(cardHtml, 'bot', true);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đơn hàng của tôi — FoodieGo</title>
+  <meta name="description" content="Theo dõi trạng thái các đơn hàng của bạn trên FoodieGo.">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    .order-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      transition: all var(--transition);
+    }
+    .order-card:hover { border-color: var(--border-accent); }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .order-id { font-size: 0.82rem; color: var(--text-muted); margin-top: 3px; }
+    .order-restaurant { font-size: 1rem; font-weight: 700; }
+    .order-items-list { margin: 0.8rem 0; }
+    .order-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .order-meta { font-size: 0.82rem; color: var(--text-muted); }
+    .order-total-amount { font-weight: 800; color: var(--accent); font-size: 1.05rem; }
+
+    /* ── Status Timeline ────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 1rem 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .status-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 70px;
+    }
+    .status-dot-step {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      transition: all var(--transition);
+    }
+    .status-dot-step.done {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .status-dot-step.current {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+    .status-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      min-width: 20px;
+    }
+    .status-line.done { background: var(--accent); }
+    .status-label { font-size: 0.68rem; color: var(--text-muted); text-align: center; line-height: 1.2; }
+    .status-label.active { color: var(--accent); font-weight: 600; }
+
+    /* ── Loyalty Widget ─────────────────────────────────── */
+    .loyalty-widget {
+      background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(255,140,90,0.05));
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: var(--radius-lg);
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .loyalty-tier-badge {
+      padding: .35rem .9rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #ff8c5a);
+      color: #fff;
+      white-space: nowrap;
+    }
+    .loyalty-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .loyalty-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #ff8c5a);
+      border-radius: 99px;
+      transition: width 0.8s ease;
+    }
+    /* ── Notes display ──────────────────────────────────── */
+    .order-notes {
+      background: rgba(255,107,53,0.06);
+      border-left: 3px solid var(--accent);
+      padding: .5rem .8rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: .82rem;
+      color: var(--text-secondary);
+      margin: .6rem 0;
+    }
+    .orders-grid { display: flex; flex-direction: column; gap: 1.2rem; }
+
+    /* ── Tracking Map ───────────────────────────────────────── */
+    .tracking-panel {
+      margin-top: 1rem;
+      border-top: 1px dashed var(--border);
+      padding-top: 1rem;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+    .tracking-panel.active { display: block; }
+    .map-container {
+      width: 100%;
+      height: 250px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #e9e5dc;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div id="toast-container"></div>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">🍜</span>
+      Foodie<span>Go</span>
+    </a>
+    <div class="navbar-nav" id="nav-items"></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container">
+      <!-- Loyalty Widget -->
+      <div class="loyalty-widget fade-in" id="loyalty-widget" style="display:none">
+        <div>🏆</div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;">Điểm tích lũy: <span id="lp-points" style="color:var(--accent);">–</span></div>
+          <div style="font-size:.78rem;color:var(--text-muted);">Hạng: <span id="lp-tier">–</span> · Còn <span id="lp-next">–</span> điểm lên <span id="lp-next-tier">–</span></div>
+        </div>
+        <div class="loyalty-progress-bar"><div class="loyalty-progress-fill" id="lp-bar" style="width:0%"></div></div>
+        <span class="loyalty-tier-badge" id="lp-badge">–</span>
+        <button class="btn btn-ghost btn-sm" onclick="redeemPoints()">🎁 Đổi điểm</button>
+      </div>
+
+      <section class="section">
+        <div class="section-header fade-in">
+          <h1 class="section-title">📦 Đơn hàng của tôi</h1>
+          <p class="section-subtitle">Theo dõi trạng thái đơn hàng theo thời gian thực</p>
+        </div>
+        <div id="orders-list" class="orders-grid">
+          <div class="loading-center"><div class="spinner"></div><span>Đang tải đơn hàng...</span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+
+    // ── Role guard: restaurant/admin không dùng trang này ─────────
+    if (isRestaurant()) {
+      window.location.href = 'restaurant-dashboard.html';
+    }
+    if (isAdmin()) {
+      window.location.href = 'admin.html';
+    }
+
+    const STATUS_STEPS = ['pending','accepted','preparing','delivering','completed'];
+    const STATUS_ICONS = { pending:'🕐', accepted:'✅', preparing:'👨‍🍳', delivering:'🛵', completed:'🎉', cancelled:'❌' };
+    const STATUS_LABELS = { pending:'Chờ xác nhận', accepted:'Đã xác nhận', preparing:'Đang chuẩn bị', delivering:'Đang giao', completed:'Hoàn thành', cancelled:'Đã hủy' };
+
+    function renderNav() {
+      const user = getUser();
+      const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+      document.getElementById('nav-items').innerHTML = `
+        <a href="index.html" class="nav-link">🏠 Trang chủ</a>
+        <a href="orders.html" class="nav-link active">📦 Đơn hàng</a>
+        ${isAdmin() ? '<a href="admin.html" class="nav-link">⚙️ Admin</a>' : ''}
+        <a href="profile.html" style="display:flex;align-items:center;gap:8px;padding:0.4rem 0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:0.85rem;font-weight:600;text-decoration:none;color:inherit;">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;">${initials}</div>
+          <span>${user?.name?.split(' ').pop()}</span>
+        </a>`;
+    }
+
+    function renderStatusBar(currentStatus) {
+      if (currentStatus === 'cancelled') {
+        return `<div style="margin:0.8rem 0;"><span class="badge badge-cancelled">❌ Đơn hàng đã bị hủy</span></div>`;
+      }
+      const currentIdx = STATUS_STEPS.indexOf(currentStatus);
+      return `
+        <div class="status-bar">
+          ${STATUS_STEPS.map((s, i) => {
+            const isDone = i < currentIdx;
+            const isCurrent = i === currentIdx;
+            const dotClass = isDone ? 'done' : isCurrent ? 'current' : '';
+            const labelClass = isCurrent ? 'active' : '';
+            const lineClass = i < currentIdx ? 'done' : '';
+            return `
+              ${i > 0 ? `<div class="status-line ${lineClass}"></div>` : ''}
+              <div class="status-step">
+                <div class="status-dot-step ${dotClass}">${isDone ? '✓' : STATUS_ICONS[s]}</div>
+                <span class="status-label ${labelClass}">${STATUS_LABELS[s]}</span>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function renderOrderCard(order) {
+      const items = order.items || [];
+      const notesHtml = order.notes ? `<div class="order-notes">📝 <strong>Ghi chú:</strong> ${order.notes}</div>` : '';
+      const pointsEarned = order.status === 'completed' ? Math.floor(Number(order.total_amount) / 1000) : 0;
+      return `
+        <div class="order-card fade-in">
+          <div class="order-header">
+            <div>
+              <div class="order-restaurant">🏪 ${order.restaurant_name || `Nhà hàng #${order.restaurant_id}`}</div>
+              <div class="order-id">#${order.id} • ${formatDate(order.created_at)}</div>
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">
+                Thanh toán: ${order.payment_method === 'transfer' ? '💳 Chuyển khoản' : '💵 Tiền mặt'} 
+                <strong style="color: ${order.payment_status === 'paid' ? 'var(--accent)' : 'inherit'}">(${order.payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'})</strong>
+              </div>
+            </div>
+            ${statusBadge(order.status)}
+          </div>
+          ${renderStatusBar(order.status)}
+          ${notesHtml}
+          ${items.length ? `
+            <div class="order-items-list">
+              ${items.slice(0,3).map(i => `
+                <div class="order-item-row">
+                  <span>${i.name || i.item_name || `Món #${i.menu_item_id}`} × ${i.quantity}</span>
+                  <span class="price">${formatCurrency(i.unit_price * i.quantity)}</span>
+                </div>`).join('')}
+              ${items.length > 3 ? `<div class="order-item-row text-muted">+${items.length-3} món khác...</div>` : ''}
+            </div>` : ''}
+          <div class="order-footer">
+            <div>
+              <div class="order-total-amount">${formatCurrency(order.total_amount)}</div>
+              ${pointsEarned > 0 ? `<div style="font-size:.78rem;color:#fbbf24;margin-top:.2rem;">⭐ +${pointsEarned} điểm tích lũy</div>` : ''}
+            </div>
+            <div style="display:flex;gap:.5rem;">
+              <button class="btn btn-ghost btn-sm" onclick="showTimeline(${order.id})">🗺️ Timeline</button>
+              ${order.status !== 'cancelled' ? `<button class="btn btn-primary btn-sm" onclick="toggleTracking(${order.id}, '${order.status}')">📍 Tracking</button>` : ''}
+            </div>
+          </div>
+          <!-- Timeline panel -->
+          <div class="tracking-panel" id="timeline-panel-${order.id}" style="display:none;">
+            <div id="timeline-content-${order.id}" style="display:flex;flex-direction:column;gap:.5rem;padding-top:.5rem;"></div>
+          </div>
+          ${order.status !== 'cancelled' ? `
+          <div class="tracking-panel" id="tracking-panel-${order.id}">
+            <div style="font-size:.85rem;margin-bottom:.5rem;color:var(--text-secondary);">Bản đồ hành trình (Live Tracking):</div>
+            <div id="map-${order.id}" class="map-container"></div>
+          </div>` : ''}
+        </div>`;
+    }
+
+    async function loadOrders() {
+      renderNav();
+      try {
+        const orders = await ordersAPI.getMy();
+        const el = document.getElementById('orders-list');
+        if (!orders.length) {
+          el.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <h3>Chưa có đơn hàng nào</h3>
+              <p>Hãy đặt món yêu thích của bạn!</p>
+              <a href="index.html" class="btn btn-primary mt-2">🍽️ Xem nhà hàng</a>
+            </div>`;
+          return;
+        }
+        el.innerHTML = orders
+          .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+          .map(renderOrderCard).join('');
+      } catch (err) {
+        showToast('Lỗi tải đơn hàng: ' + err.message, 'error');
+      }
+    }
+
+    loadOrders();
+    loadLoyaltyWidget();
+
+    // ── Loyalty Points Widget ────────────────────────────────
+    async function loadLoyaltyWidget() {
+      if (!isCustomer()) return;
+      try {
+        const bal = await loyaltyAPI.getBalance();
+        document.getElementById('loyalty-widget').style.display = 'flex';
+        document.getElementById('lp-points').textContent = bal.points.toLocaleString('vi-VN');
+        document.getElementById('lp-tier').textContent = bal.tier;
+        document.getElementById('lp-badge').textContent = `🏅 ${bal.tier}`;
+        if (bal.next_tier) {
+          const left = (bal.next_tier_points - bal.points);
+          document.getElementById('lp-next').textContent = left.toLocaleString('vi-VN');
+          document.getElementById('lp-next-tier').textContent = bal.next_tier;
+          setTimeout(() => { document.getElementById('lp-bar').style.width = bal.progress_percent + '%'; }, 200);
+        } else {
+          document.getElementById('lp-next').textContent = '0';
+          document.getElementById('lp-next-tier').textContent = 'Kim cương ✨';
+          setTimeout(() => { document.getElementById('lp-bar').style.width = '100%'; }, 200);
+        }
+      } catch (_) {}
+    }
+
+    async function redeemPoints() {
+      const bal = await loyaltyAPI.getBalance().catch(() => null);
+      if (!bal || bal.points < 100) { showToast('Cần tối thiểu 100 điểm để đổi', 'error'); return; }
+      const pts = prompt(`Bạn có ${bal.points} điểm. Nhập số điểm muốn đổi (100 điểm = 10.000đ):`);
+      if (!pts) return;
+      try {
+        const r = await loyaltyAPI.redeem(Number(pts));
+        showToast(`🎁 ${r.message}`, 'success');
+        loadLoyaltyWidget();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── Order Timeline ───────────────────────────────────────
+    async function showTimeline(orderId) {
+      const panel = document.getElementById(`timeline-panel-${orderId}`);
+      const content = document.getElementById(`timeline-content-${orderId}`);
+      if (!panel) return;
+      const isVisible = panel.style.display !== 'none';
+      panel.style.display = isVisible ? 'none' : 'block';
+      if (isVisible) return;
+
+      content.innerHTML = '<div class="spinner"></div>';
+      try {
+        const data = await timelineAPI.getTimeline(orderId);
+        const STATUS_ICONS = { pending:'🕐', accepted:'✅', preparing:'👨‍🍳', delivering:'🛵', completed:'🎉', cancelled:'❌' };
+        const STATUS_LABELS = { pending:'Đặt đơn', accepted:'Đã xác nhận', preparing:'Đang nấu', delivering:'Đang giao', completed:'Hoàn thành', cancelled:'Đã hủy' };
+        content.innerHTML = data.timeline.map((step, i) => `
+          <div style="display:flex;align-items:flex-start;gap:.8rem;padding:.4rem 0;">
+            <div style="width:28px;height:28px;border-radius:50%;background:${step.status==='cancelled'?'rgba(239,68,68,.2)':'rgba(255,107,53,.2)'};border:2px solid ${step.status==='cancelled'?'#f87171':'var(--accent)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem;">${STATUS_ICONS[step.status]||'•'}</div>
+            <div style="flex:1;border-left:${i < data.timeline.length-1 ? '2px dashed rgba(255,107,53,.2)' : 'none'};padding-left:.5rem;padding-bottom:.8rem;">
+              <div style="font-weight:600;font-size:.88rem;">${STATUS_LABELS[step.status]||step.status}</div>
+              <div style="font-size:.75rem;color:var(--text-muted);">${formatDate(step.changed_at)}</div>
+            </div>
+          </div>`).join('');
+      } catch (err) {
+        content.innerHTML = `<div style="color:var(--text-muted);font-size:.85rem;">Không thể tải timeline: ${err.message}</div>`;
+      }
+    }
+
+    // ── Live Tracking Logic ──────────────────────────────────────
+    const maps = {}; // lưu instance của leaflet
+    const intervals = {}; // lưu animation interval
+
+    function toggleTracking(orderId, status) {
+      const panel = document.getElementById(`tracking-panel-${orderId}`);
+      if (panel.classList.contains('active')) {
+        panel.classList.remove('active');
+        // Dọn dẹp
+        if (intervals[orderId]) clearInterval(intervals[orderId]);
+        return;
+      }
+      
+      panel.classList.add('active');
+      initMap(orderId, status);
+    }
+
+    function initMap(orderId, status) {
+      if (maps[orderId]) return; // Đã init rồi
+
+      // Tọa độ giả lập khu vực HCM
+      const resLat = 10.7769; 
+      const resLng = 106.7009; // Q1
+      
+      // Random nhà cách nhà hàng 1-2 km
+      const homeLat = resLat + (Math.random() * 0.02 - 0.01);
+      const homeLng = resLng + (Math.random() * 0.02 - 0.01);
+
+      const map = L.map(`map-${orderId}`).setView([resLat, resLng], 14);
+      maps[orderId] = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Icons
+      const resIcon = L.divIcon({ html: '<div style="font-size:24px;">🏪</div>', className: 'dummy', iconSize:[30,30] });
+      const homeIcon = L.divIcon({ html: '<div style="font-size:24px;">🏠</div>', className: 'dummy', iconSize:[30,30] });
+      const shipperIcon = L.divIcon({ html: '<div style="font-size:30px;">🛵</div>', className: 'dummy', iconSize:[35,35] });
+
+      L.marker([resLat, resLng], {icon: resIcon}).addTo(map).bindPopup('Nhà hàng');
+      L.marker([homeLat, homeLng], {icon: homeIcon}).addTo(map).bindPopup('Nhà bạn');
+
+      // Vẽ đường đứt nét
+      L.polyline([[resLat, resLng], [homeLat, homeLng]], {color: 'var(--accent)', dashArray: '5, 10'}).addTo(map);
+
+      // Shipper marker
+      let shipperMarker;
+
+      if (status === 'completed') {
+        shipperMarker = L.marker([homeLat, homeLng], {icon: shipperIcon}).addTo(map);
+        map.fitBounds([[resLat, resLng], [homeLat, homeLng]], {padding: [20,20]});
+      } 
+      else if (status === 'delivering') {
+        // Mô phỏng shipper di chuyển từ Nhà hàng -> Nhà
+        let progress = 0;
+        shipperMarker = L.marker([resLat, resLng], {icon: shipperIcon}).addTo(map);
+        
+        intervals[orderId] = setInterval(() => {
+          progress += 0.01;
+          if (progress >= 1) {
+            progress = 1;
+            clearInterval(intervals[orderId]);
+          }
+          const curLat = resLat + (homeLat - resLat) * progress;
+          const curLng = resLng + (homeLng - resLng) * progress;
+          shipperMarker.setLatLng([curLat, curLng]);
+        }, 100);
+
+        map.fitBounds([[resLat, resLng], [homeLat, homeLng]], {padding: [20,20]});
+      }
+      else {
+        // Đang chuẩn bị / Đã nhận -> Shipper vẫn ở nhà hàng
+        shipperMarker = L.marker([resLat, resLng], {icon: shipperIcon}).addTo(map);
+        map.setView([resLat, resLng], 15);
+      }
+
+      // Xử lý map resize bug khi thẻ display:none -> block
+      setTimeout(() => map.invalidateSize(), 300);
+    }
+  </script>
+</body>
+</html>
