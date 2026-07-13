@@ -112,6 +112,7 @@ async function earnPoints(customerId, orderId, totalAmount) {
       [customerId, orderId, points, `Tích điểm từ đơn #${orderId} (${Number(totalAmount).toLocaleString('vi-VN')}đ)`]
     );
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error('[Loyalty] earnPoints error:', e.message);
   }
 }
