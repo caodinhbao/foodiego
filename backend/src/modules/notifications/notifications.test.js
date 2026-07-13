@@ -1,10 +1,8 @@
 const express = require('express');
 const notificationsRouter = require('./notifications.router');
 const { notifyNewOrder } = require('./notifications.router');
-const http = require('http');
 
 jest.mock('../../config/db', () => ({ query: jest.fn() }));
-const db = require('../../config/db');
 
 jest.mock('jsonwebtoken', () => ({
   verify: jest.fn(),
@@ -53,18 +51,18 @@ describe('Notifications Tests using fetch', () => {
   it('should connect SSE and notify new order', async () => {
     jwt.verify.mockReturnValue({ role: 'admin', id: 1 });
     const ac = new AbortController();
-    
+
     // Connect to stream
     const res = await fetch(`http://localhost:${port}/api/notifications/stream?token=valid&restaurant_id=5`, {
       signal: ac.signal,
     });
-    
+
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/event-stream');
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    
+
     // Read the connected event
     const { value } = await reader.read();
     const str = decoder.decode(value);
@@ -83,7 +81,9 @@ describe('Notifications Tests using fetch', () => {
     ac.abort();
     try {
       await reader.read(); // will throw AbortError
-    } catch(e) {}
+    } catch(e) {
+      // Expected exception on abort
+    }
   });
 
   it('should not throw if no clients', () => {

@@ -92,7 +92,7 @@ describe('Orders Router', () => {
         .patch('/api/orders/10/status')
         .set('Authorization', 'Bearer valid')
         .send({ status: 'accepted' });
-      
+
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('accepted');
     });
@@ -105,7 +105,7 @@ describe('Orders Router', () => {
         .patch('/api/orders/10/status')
         .set('Authorization', 'Bearer valid')
         .send({ status: 'accepted' });
-      
+
       expect(res.status).toBe(500);
     });
   });

@@ -18,7 +18,7 @@ describe('Flash Sales Router', () => {
     it('should return active flash sales', async () => {
       db.query.mockResolvedValueOnce({
         rows: [{
-          id: 1, menu_item_id: 2, discount_percent: 20, 
+          id: 1, menu_item_id: 2, discount_percent: 20,
           original_price: 100000, end_time: new Date()
         }]
       });

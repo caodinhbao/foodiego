@@ -30,7 +30,7 @@ describe('Menu Items Router', () => {
         .post('/api/restaurants/1/menu-items')
         .set('Authorization', 'Bearer token')
         .send({ name: 'Pho', price: 50000 });
-      
+
       expect(res.status).toBe(201);
       expect(res.body.name).toBe('Pho');
     });
@@ -42,7 +42,7 @@ describe('Menu Items Router', () => {
         .post('/api/restaurants/1/menu-items')
         .set('Authorization', 'Bearer token')
         .send({ name: 'Pho', price: 50000 });
-      
+
       expect(res.status).toBe(500);
     });
   });
@@ -52,7 +52,7 @@ describe('Menu Items Router', () => {
       menuItemsService.getMenuByRestaurant.mockResolvedValueOnce([{ id: 1, name: 'Pho' }]);
 
       const res = await request(app).get('/api/restaurants/1/menu-items');
-      
+
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
     });
@@ -61,7 +61,7 @@ describe('Menu Items Router', () => {
       menuItemsService.getMenuByRestaurant.mockRejectedValueOnce(new Error('Service Error'));
 
       const res = await request(app).get('/api/restaurants/1/menu-items');
-      
+
       expect(res.status).toBe(500);
     });
   });
@@ -78,7 +78,7 @@ describe('Menu Items Router', () => {
         .patch('/api/menu-items/1')
         .set('Authorization', 'Bearer token')
         .send({ name: 'Pho 2' });
-      
+
       expect(res.status).toBe(200);
       expect(res.body.name).toBe('Pho 2');
     });
@@ -90,7 +90,7 @@ describe('Menu Items Router', () => {
         .patch('/api/menu-items/1')
         .set('Authorization', 'Bearer token')
         .send({ name: 'Pho 2' });
-      
+
       expect(res.status).toBe(500);
     });
   });
@@ -106,7 +106,7 @@ describe('Menu Items Router', () => {
       const res = await request(app)
         .delete('/api/menu-items/1')
         .set('Authorization', 'Bearer token');
-      
+
       expect(res.status).toBe(204);
     });
 
@@ -116,7 +116,7 @@ describe('Menu Items Router', () => {
       const res = await request(app)
         .delete('/api/menu-items/1')
         .set('Authorization', 'Bearer token');
-      
+
       expect(res.status).toBe(500);
     });
   });

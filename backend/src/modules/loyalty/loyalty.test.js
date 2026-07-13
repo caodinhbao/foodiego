@@ -88,7 +88,7 @@ describe('Loyalty Router', () => {
       db.query
         .mockResolvedValueOnce({ rows: [{ total: '500' }] })
         .mockResolvedValueOnce({ rows: [] }); // insert
-      
+
       const res = await request(app).post('/api/loyalty/redeem').set('Authorization', 'Bearer token').send({ points: 200 });
       expect(res.status).toBe(200);
       expect(res.body.discount_amount).toBe(20000);
