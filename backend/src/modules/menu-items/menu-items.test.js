@@ -14,11 +14,12 @@ describe('menu-items.service', () => {
     it('should create menu item successfully', async () => {
       db.query
         .mockResolvedValueOnce({ rows: [{ id: 1, owner_id: 2 }] }) // SELECT restaurant
-        .mockResolvedValueOnce({ rows: [{ id: 1, restaurant_id: 1, name: 'Pho', price: 50000 }] }); // INSERT menu item
+        .mockResolvedValueOnce({ rows: { insertId: 1 } }) // INSERT menu item
+        .mockResolvedValueOnce({ rows: [{ id: 1, restaurant_id: 1, name: 'Pho', price: 50000 }] }); // SELECT new item
 
       const result = await menuItemsService.createMenuItem(1, 2, { name: 'Pho', price: 50000 });
       expect(result.name).toBe('Pho');
-      expect(db.query).toHaveBeenCalledTimes(2);
+      expect(db.query).toHaveBeenCalledTimes(3);
     });
 
     it('should throw 404 if restaurant not found', async () => {
@@ -76,11 +77,13 @@ describe('menu-items.service', () => {
   describe('updateMenuItem()', () => {
     it('should update menu item', async () => {
       db.query
-        .mockResolvedValueOnce({ rows: [{ id: 1, owner_id: 2, name: 'Old' }] })
-        .mockResolvedValueOnce({ rows: [{ id: 1, name: 'New' }] });
+        .mockResolvedValueOnce({ rows: [{ id: 1, owner_id: 2, name: 'Old' }] }) // SELECT item
+        .mockResolvedValueOnce({ rows: { affectedRows: 1 } }) // UPDATE
+        .mockResolvedValueOnce({ rows: [{ id: 1, name: 'New' }] }); // SELECT updated item
 
       const result = await menuItemsService.updateMenuItem(1, 2, { name: 'New', description: 'Desc', price: 10000, is_available: false });
       expect(result.name).toBe('New');
+      expect(db.query).toHaveBeenCalledTimes(3);
     });
 
     it('should throw 404 if item not found', async () => {

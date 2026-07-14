@@ -10,7 +10,7 @@ const db = require('../../config/db');
 const createMenuItem = async (restaurantId, ownerId, data) => {
   // Kiểm tra nhà hàng tồn tại
   const restQueryText =
-    'SELECT * FROM restaurants WHERE id = $1';
+    'SELECT * FROM restaurants WHERE id = ?';
 
   const restResult = await db.query(restQueryText, [restaurantId]);
 
@@ -54,8 +54,7 @@ const createMenuItem = async (restaurantId, ownerId, data) => {
   const queryText = `
     INSERT INTO menu_items
       (restaurant_id, name, description, price, is_available)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING *
+    VALUES (?, ?, ?, ?, ?)
   `;
 
   const result = await db.query(queryText, [
@@ -66,7 +65,10 @@ const createMenuItem = async (restaurantId, ownerId, data) => {
     is_available !== undefined ? is_available : true,
   ]);
 
-  return result.rows[0];
+  const selectQuery = 'SELECT * FROM menu_items WHERE id = ?';
+  const newItem = await db.query(selectQuery, [result.rows.insertId]);
+
+  return newItem.rows[0];
 };
 
 /**
@@ -76,7 +78,7 @@ const createMenuItem = async (restaurantId, ownerId, data) => {
  */
 const getMenuByRestaurant = async (restaurantId) => {
   const restQueryText =
-    'SELECT * FROM restaurants WHERE id = $1';
+    'SELECT * FROM restaurants WHERE id = ?';
 
   const restResult = await db.query(restQueryText, [restaurantId]);
 
@@ -89,7 +91,7 @@ const getMenuByRestaurant = async (restaurantId) => {
   const queryText = `
     SELECT *
     FROM menu_items
-    WHERE restaurant_id = $1
+    WHERE restaurant_id = ?
       AND is_available = true
     ORDER BY name ASC
   `;
@@ -114,7 +116,7 @@ const updateMenuItem = async (id, ownerId, data) => {
     FROM menu_items m
     JOIN restaurants r
       ON m.restaurant_id = r.id
-    WHERE m.id = $1
+    WHERE m.id = ?
   `;
 
   const itemResult = await db.query(itemQueryText, [id]);
@@ -137,7 +139,6 @@ const updateMenuItem = async (id, ownerId, data) => {
 
   const fields = [];
   const values = [];
-  let index = 1;
 
   if (data.name !== undefined) {
     if (!data.name.trim()) {
@@ -146,12 +147,12 @@ const updateMenuItem = async (id, ownerId, data) => {
       throw err;
     }
 
-    fields.push(`name = $${index++}`);
+    fields.push(`name = ?`);
     values.push(data.name);
   }
 
   if (data.description !== undefined) {
-    fields.push(`description = $${index++}`);
+    fields.push(`description = ?`);
     values.push(data.description);
   }
 
@@ -162,12 +163,12 @@ const updateMenuItem = async (id, ownerId, data) => {
       throw err;
     }
 
-    fields.push(`price = $${index++}`);
+    fields.push(`price = ?`);
     values.push(data.price);
   }
 
   if (data.is_available !== undefined) {
-    fields.push(`is_available = $${index++}`);
+    fields.push(`is_available = ?`);
     values.push(data.is_available);
   }
 
@@ -183,13 +184,13 @@ const updateMenuItem = async (id, ownerId, data) => {
   const queryText = `
     UPDATE menu_items
     SET ${fields.join(', ')}
-    WHERE id = $${index}
-    RETURNING *
+    WHERE id = ?
   `;
 
-  const result = await db.query(queryText, values);
+  await db.query(queryText, values);
 
-  return result.rows[0];
+  const updatedItemResult = await db.query('SELECT * FROM menu_items WHERE id = ?', [id]);
+  return updatedItemResult.rows[0];
 };
 
 /**
@@ -205,7 +206,7 @@ const deleteMenuItem = async (id, ownerId) => {
     FROM menu_items m
     JOIN restaurants r
       ON m.restaurant_id = r.id
-    WHERE m.id = $1
+    WHERE m.id = ?
   `;
 
   const itemResult = await db.query(itemQueryText, [id]);
@@ -227,7 +228,7 @@ const deleteMenuItem = async (id, ownerId) => {
   }
 
   const queryText =
-    'UPDATE menu_items SET is_available = false WHERE id = $1';
+    'UPDATE menu_items SET is_available = false WHERE id = ?';
 
   await db.query(queryText, [id]);
 };

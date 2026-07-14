@@ -41,15 +41,18 @@ const createRestaurant = async (ownerId, data) => {
 /**
  * Lấy danh sách nhà hàng đang hoạt động
  */
-const getAllRestaurants = async () => {
-  const { rows } = await db.query(
-    `
-      SELECT *
-      FROM restaurants
-      WHERE status = 'active'
-      ORDER BY created_at DESC
-    `
-  );
+const getAllRestaurants = async (search) => {
+  let query = 'SELECT * FROM restaurants WHERE status = ?';
+  const params = ['active'];
+
+  if (search) {
+    query += ' AND name LIKE ?';
+    params.push(`%${search}%`);
+  }
+
+  query += ' ORDER BY created_at DESC';
+
+  const { rows } = await db.query(query, params);
 
   return rows;
 };

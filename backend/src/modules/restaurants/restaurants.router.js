@@ -16,8 +16,6 @@ router.post(
   authorize('restaurant'),
   async (req, res, next) => {
     try {
-      // TODO: Validate request body
-
       const restaurant = await restaurantsService.createRestaurant(
         req.user.id,
         req.body
@@ -37,7 +35,7 @@ router.post(
  */
 router.get('/', async (req, res, next) => {
   try {
-    const restaurants = await restaurantsService.getAllRestaurants();
+    const restaurants = await restaurantsService.getAllRestaurants(req.query.search);
 
     return res.status(200).json(restaurants);
   } catch (err) {

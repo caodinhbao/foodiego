@@ -54,7 +54,7 @@
 | ID | User Story | Task kỹ thuật | Assign | Status |
 |----|-----------|--------------|--------|--------|
 | US-19 | *As a system*, tính phí giao hàng tự động qua FastAPI service. | `POST /delivery-fee/calculate` — Python FastAPI | 🟡 C | ✅ Done |
-| US-20 | *As a customer*, I want to leave a review for a restaurant. | `POST /api/reviews`, `GET /api/restaurants/:id/reviews` | 🟢 B | ⬜ Todo |
+| US-20 | *As a customer*, I want to leave a review for a restaurant. | `POST /api/reviews`, `GET /api/restaurants/:id/reviews` | 🟢 B | 🟢 Done |
 | US-21 | *As a team*, đo và báo cáo metrics Lead Time, Coverage, CI Fail Rate. | Thu thập từ GitHub + Sonar, ghi vào `docs/metrics.md` | Cả nhóm | 🔄 In Progress |
 | US-22 | *As a developer*, README đầy đủ hướng dẫn chạy và API docs. | Cập nhật README.md — MySQL/XAMPP + frontend | 🔵 A | ✅ Done |
 
@@ -64,9 +64,9 @@
 
 | ID | User Story | Task kỹ thuật | Assign | Status |
 |----|-----------|--------------|--------|--------|
-| US-23 | *As an admin*, I want a dashboard showing order statistics. | Aggregate query + endpoint thống kê | 🟡 C | ⬜ Todo |
-| US-24 | *As a customer*, I want to search restaurants by name or cuisine. | `GET /api/restaurants?search=...` | 🟢 B | ⬜ Todo |
-| US-25 | *As a restaurant owner*, I want to see my revenue summary. | Aggregate query cho owner | 🟡 C | ⬜ Todo |
+| US-23 | *As an admin*, I want a dashboard showing order statistics. | Aggregate query + endpoint thống kê | 🟡 C | 🟢 Done |
+| US-24 | *As a customer*, I want to search restaurants by name or cuisine. | `GET /api/restaurants?search=...` | 🟢 B | 🟢 Done |
+| US-25 | *As a restaurant owner*, I want to see my revenue summary. | Aggregate query cho owner | 🟡 C | 🟢 Done |
 
 ---
 

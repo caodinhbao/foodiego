@@ -42,12 +42,15 @@ backend/src/
 │   └── db.js            # Cấu hình kết nối và connection pool cho MySQL
 ├── middlewares/         # Middleware dùng chung (vd: auth.middleware.js, error_handler)
 └── modules/             # Chia thư mục theo từng tính năng (Domain-Driven)
+    ├── admin/           # module thống kê admin
     ├── auth/            # module xác thực
-    ├── orders/          # module đơn hàng
+    ├── flash-sales/     # module khuyến mãi giờ vàng
+    ├── loyalty/         # module tích điểm
     ├── menu-items/      # module thực đơn
     ├── notifications/   # module thông báo thời gian thực (SSE)
-    └── ...
-```
+    ├── orders/          # module đơn hàng
+    ├── restaurants/     # module quản lý nhà hàng
+    └── users/           # module người dùng
 
 **Tại sao chọn Modular Architecture?**
 - **Tính đóng gói (Encapsulation):** Mỗi module chứa sẵn Router, Controller, Service và Tests của riêng nó. 

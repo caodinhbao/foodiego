@@ -21,15 +21,13 @@ router.post(
   authorize('restaurant'),
   async (req, res, next) => {
     try {
-      // TODO: Validate request body
-
-      const item = await menuItemsService.createMenuItem(
+      const menuItem = await menuItemsService.createMenuItem(
         req.params.restaurantId,
         req.user.id,
         req.body
       );
 
-      return res.status(201).json(item);
+      return res.status(201).json(menuItem);
     } catch (err) {
       next(err);
     }

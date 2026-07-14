@@ -140,6 +140,47 @@ npm run lint          # ESLint
 | GET | `/api/orders/my` | Đơn của tôi | Customer |
 | GET | `/api/orders/:id` | Chi tiết đơn | Customer / Owner |
 | PATCH | `/api/orders/:id/status` | Cập nhật trạng thái | Owner |
+| GET | `/api/orders/:id/timeline` | Lịch sử trạng thái đơn | Customer / Owner |
+| POST | `/api/orders/apply-voucher` | Áp dụng mã giảm giá | Customer |
+
+### Reviews (Đánh giá)
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|----------|-------|------|
+| POST | `/api/restaurants/:id/reviews` | Viết đánh giá nhà hàng | Customer |
+| GET | `/api/restaurants/:id/reviews` | Xem đánh giá nhà hàng | ❌ |
+
+### Loyalty (Tích điểm)
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|----------|-------|------|
+| GET | `/api/loyalty/balance` | Xem điểm và hạng thành viên | Customer |
+| GET | `/api/loyalty/history` | Xem lịch sử tích/tiêu điểm | Customer |
+| POST | `/api/loyalty/redeem` | Đổi điểm lấy mã giảm giá | Customer |
+
+### Flash Sales (Khuyến mãi Giờ Vàng)
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|----------|-------|------|
+| GET | `/api/flash-sales/active` | Xem các chiến dịch đang chạy | ❌ |
+| GET | `/api/flash-sales` | Danh sách chiến dịch | Admin |
+| GET | `/api/flash-sales/:id` | Chi tiết chiến dịch | ❌ |
+
+### Admin Analytics
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|----------|-------|------|
+| GET | `/api/admin/analytics` | Thống kê tổng quan hệ thống | Admin |
+| GET | `/api/admin/top-restaurants` | Top 5 nhà hàng doanh thu cao | Admin |
+| GET | `/api/admin/top-items` | Top 5 món bán chạy nhất | Admin |
+| GET | `/api/admin/users-stats` | Thống kê người dùng theo role | Admin |
+
+### Notifications (Thông báo)
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|----------|-------|------|
+| GET | `/api/notifications` | Lấy danh sách thông báo | ✅ |
+| PATCH | `/api/notifications/read-all` | Đánh dấu đã đọc tất cả | ✅ |
 
 ### Delivery Fee Service (FastAPI)
 
@@ -182,6 +223,11 @@ menu_items (id, restaurant_id, name, description, price, is_available, created_a
 orders (id, customer_id, restaurant_id, total_amount, delivery_fee, status, created_at)
 order_items (id, order_id, menu_item_id, quantity, unit_price)
 reviews (id, customer_id, restaurant_id, rating, comment, created_at)
+loyalty_points (id, customer_id, order_id, points, description, created_at)
+flash_sales (id, name, start_time, end_time, status, created_at)
+flash_sale_items (id, flash_sale_id, menu_item_id, discount_percent, created_at)
+order_status_logs (id, order_id, status, changed_by, changed_at)
+notifications (id, user_id, title, body, is_read, type, reference_id, created_at)
 ```
 
 ---
@@ -202,28 +248,45 @@ reviews (id, customer_id, restaurant_id, rating, comment, created_at)
 ```
 foodiego/
 ├── backend/
+│   ├── migrations/
+│   ├── scripts/
 │   ├── src/
-│   │   ├── app.js
-│   │   ├── server.js
 │   │   ├── config/
-│   │   ├── modules/
-│   │   │   ├── auth/
-│   │   │   ├── users/
-│   │   │   ├── restaurants/
-│   │   │   ├── menu-items/
-│   │   │   └── orders/
 │   │   ├── middlewares/
-│   │   └── tests/
+│   │   ├── modules/
+│   │   │   ├── admin/
+│   │   │   ├── auth/
+│   │   │   ├── flash-sales/
+│   │   │   ├── loyalty/
+│   │   │   ├── menu-items/
+│   │   │   ├── notifications/
+│   │   │   ├── orders/
+│   │   │   ├── restaurants/
+│   │   │   └── users/
+│   │   ├── tests/
+│   │   ├── app.js
+│   │   └── server.js
 │   ├── package.json
 │   └── Dockerfile
 ├── delivery-service/
 │   ├── main.py
 │   ├── requirements.txt
 │   └── Dockerfile
+├── frontend/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── api.js
+│   ├── index.html
+│   ├── login.html
+│   ├── admin.html
+│   └── ... (các file HTML khác)
 ├── docs/
-│   ├── process-etvx.md
+│   ├── architecture.md
 │   ├── backlog.md
-│   └── metrics.md
+│   ├── metrics.md
+│   ├── process-etvx.md
+│   └── project-plan.md
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
