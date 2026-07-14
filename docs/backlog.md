@@ -43,7 +43,7 @@
 | US-13 | *As a developer*, Order API có unit test và integration test. | Jest + Supertest cho orders module — coverage ≥ 80% | 🟡 C | ✅ Done |
 | US-14 | *As a developer*, Auth API có unit test. | Jest unit test cho auth service (9 test cases) | 🔵 A | ✅ Done |
 | US-15 | *As a team*, GitHub Actions tự động chạy lint + test trên mỗi PR. | Viết `.github/workflows/ci.yml` — MySQL + feature/** trigger | 🔵 A | ✅ Done |
-| US-16 | *As a team*, SonarQube được tích hợp để phân tích chất lượng code. | Cấu hình SonarQube + token trong CI | 🔵 A | ⬜ Todo |
+| US-16 | *As a team*, SonarQube được tích hợp để phân tích chất lượng code. | Cấu hình SonarQube + token trong CI | 🔵 A | 🟢 Done |
 | US-17 | *As an admin*, I want to see a list of all users. | `GET /api/users` — chỉ Admin được gọi | 🔵 A | ✅ Done |
 | US-18 | *As an admin*, I want to update user roles. | `PATCH /api/users/:id/role` — chỉ Admin | 🔵 A | ✅ Done |
 

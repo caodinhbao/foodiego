@@ -61,11 +61,11 @@ jobs:
           NODE_ENV: test
         run: npm test
 
-      # - name: SonarQube scan
-      #   uses: SonarSource/sonarcloud-github-action@master
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ── Test (Python Delivery Service) ────────────────────────────────────────
   delivery-service:
@@ -88,3 +88,17 @@ jobs:
       - name: Run pytest
         working-directory: delivery-service
         run: pytest test_main.py -v
+
+  # ── Deploy (Render.com) ───────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Render
+    needs: [backend, delivery-service]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Trigger Render Deploy Hook
+        if: env.RENDER_DEPLOY_HOOK != ''
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -X POST "$RENDER_DEPLOY_HOOK"
