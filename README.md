@@ -73,9 +73,9 @@ Sau khi khởi động:
 ### Chạy backend riêng (Dùng XAMPP / MySQL cục bộ)
 
 Nếu bạn không cài Docker, bạn có thể chạy thủ công bằng XAMPP:
-1. Bật **Apache** và **MySQL** trên XAMPP Control Panel.
-2. Mở phpMyAdmin (http://localhost/phpmyadmin), tạo database tên là `foodiego_db`.
-3. Nhập (Import) file `backend/migrations/002_mysql.sql` vào database vừa tạo.
+1. Bật **MySQL** trên XAMPP Control Panel.
+2. Mở phần mềm **Navicat** (hoặc phpMyAdmin), kết nối vào localhost, tạo database tên là `foodiego_db`.
+3. Mở file `backend/migrations/002_mysql.sql` bằng Navicat và chạy (Run) toàn bộ file để tạo bảng.
 4. Copy file cấu hình môi trường:
    ```bash
    cd backend
