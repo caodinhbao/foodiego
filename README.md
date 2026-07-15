@@ -298,8 +298,10 @@ foodiego/
 ├── docs/
 │   ├── architecture.md
 │   ├── backlog.md
+│   ├── features-guide.md
 │   ├── metrics.md
 │   ├── process-etvx.md
+│   ├── retrospective.md
 │   └── project-plan.md
 ├── .github/
 │   └── workflows/
