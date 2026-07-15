@@ -70,13 +70,22 @@ Sau khi khởi động:
 | Delivery Fee Service | http://localhost:8000 |
 | MySQL | localhost:3306 |
 
-### Chạy backend riêng (development)
+### Chạy backend riêng (Dùng XAMPP / MySQL cục bộ)
 
-```bash
-cd backend
-npm install
-npm run dev
-```
+Nếu bạn không cài Docker, bạn có thể chạy thủ công bằng XAMPP:
+1. Bật **Apache** và **MySQL** trên XAMPP Control Panel.
+2. Mở phpMyAdmin (http://localhost/phpmyadmin), tạo database tên là `foodiego_db`.
+3. Nhập (Import) file `backend/migrations/002_mysql.sql` vào database vừa tạo.
+4. Copy file cấu hình môi trường:
+   ```bash
+   cd backend
+   cp .env.example .env
+   ```
+5. Cài đặt thư viện và chạy:
+   ```bash
+   npm install
+   npm run dev
+   ```
 
 ### Chạy delivery service riêng
 
@@ -85,6 +94,11 @@ cd delivery-service
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
+
+### Chạy Giao diện (Frontend)
+1. Mở thư mục `frontend/`.
+2. Mở file `index.html` bằng trình duyệt (Chrome/Edge) hoặc dùng extension **Live Server** trên VSCode.
+3. Hệ thống đã được tích hợp sẵn để gọi tới `http://localhost:3000` (Backend của bạn).
 
 ### Chạy test
 
