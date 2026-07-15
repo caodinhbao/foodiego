@@ -160,12 +160,12 @@ const updateMenuItem = async (id, ownerId, data) => {
       throw err;
     }
 
-    fields.push(`name = ?`);
+    fields.push('name = ?');
     values.push(data.name);
   }
 
   if (data.description !== undefined) {
-    fields.push(`description = ?`);
+    fields.push('description = ?');
     values.push(data.description);
   }
 
@@ -176,12 +176,12 @@ const updateMenuItem = async (id, ownerId, data) => {
       throw err;
     }
 
-    fields.push(`price = ?`);
+    fields.push('price = ?');
     values.push(data.price);
   }
 
   if (data.is_available !== undefined) {
-    fields.push(`is_available = ?`);
+    fields.push('is_available = ?');
     values.push(data.is_available);
   }
 
