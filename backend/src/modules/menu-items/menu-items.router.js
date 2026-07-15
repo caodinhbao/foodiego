@@ -140,6 +140,31 @@ routerItem.get('/search', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/menu-items/all
+ * Lấy tất cả món ăn (dùng cho Admin tạo Flash Sale)
+ */
+routerItem.get('/all', async (req, res, next) => {
+  try {
+    const db = require('../../config/db');
+    const { rows } = await db.query(
+      `
+        SELECT
+          mi.id,
+          mi.name,
+          mi.price,
+          r.name AS restaurant_name
+        FROM menu_items mi
+        JOIN restaurants r ON r.id = mi.restaurant_id
+        ORDER BY r.name ASC, mi.name ASC
+      `
+    );
+    return res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = {
   menuItemsByRestaurantRouter: router,
   menuItemsRouter: routerItem,

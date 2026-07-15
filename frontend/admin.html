@@ -195,8 +195,10 @@
           <h3 style="margin-bottom:1rem;font-size:1rem;">⚡ Tạo Flash Sale mới</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div class="form-group">
-              <label class="form-label">ID Món ăn *</label>
-              <input type="number" id="fs-item-id" class="form-control" placeholder="VD: 1">
+              <label class="form-label">Chọn Món ăn *</label>
+              <select id="fs-item-id" class="form-control">
+                <option value="">-- Đang tải danh sách món ăn --</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label">Giảm giá (%) *</label>
@@ -240,13 +242,16 @@
     }
 
     // ── Tab switching ─────────────────────────────────────
-    function switchTab(tab) {
+    function switchTab(tabId) {
       document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-      document.getElementById(`tab-${tab}`).classList.add('active');
-      document.getElementById(`section-${tab}`).classList.add('active');
-      if (tab === 'users') loadUsers();
-      if (tab === 'flash') loadFlashSales();
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      document.getElementById(`section-${tabId}`).classList.add('active');
+      if (tabId === 'users') loadUsers();
+      if (tabId === 'flash') {
+        loadFlashSales();
+        loadMenuItemsForSelect();
+      }
     }
 
     // ── ANALYTICS ────────────────────────────────────────
@@ -464,6 +469,27 @@
         });
       } catch (err) {
         showToast('Lỗi tải flash sales: ' + err.message, 'error');
+      }
+    }
+
+    async function loadMenuItemsForSelect() {
+      try {
+        const res = await fetch('/api/menu-items/all', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('foodiego_token')}` }
+        });
+        if (!res.ok) throw new Error('Không thể tải menu items');
+        const data = await res.json();
+        const select = document.getElementById('fs-item-id');
+        if (!data || data.length === 0) {
+          select.innerHTML = '<option value="">Không có món ăn nào</option>';
+          return;
+        }
+        select.innerHTML = '<option value="">-- Chọn một món ăn --</option>' + data.map(item => 
+          `<option value="${item.id}">[${item.restaurant_name}] ${item.name} - ${formatCurrency(item.price)}</option>`
+        ).join('');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('fs-item-id').innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
       }
     }
 
