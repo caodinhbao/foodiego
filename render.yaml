@@ -1,0 +1,45 @@
+services:
+  # 1. Delivery Service (Python/FastAPI)
+  - type: web
+    name: foodiego-delivery-service
+    env: python
+    rootDir: delivery-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # 2. FoodieGo Backend (Node.js/Express)
+  - type: web
+    name: foodiego-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: foodiego_db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: DELIVERY_SERVICE_URL
+        fromService:
+          type: web
+          name: foodiego-delivery-service
+          property: url
