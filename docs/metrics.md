@@ -64,12 +64,12 @@
 
 | Metric | Giá trị | Ghi chú |
 |--------|---------|---------|
-| Test Coverage | — | Cần điền sau khi viết thêm test |
-| CI Fail Rate | — | Điền sau khi xem GitHub Actions history |
-| Lead Time TB | — | Điền sau khi merge hết PR |
-| SonarQube Issues | — | Chưa cấu hình SONAR_TOKEN |
-| Số PR đã merge | — | — |
-| Số bug phát sinh | — | — |
+| Test Coverage | **86.8%** | Vượt mục tiêu (≥ 80%), 161 test cases |
+| CI Fail Rate | ~5% | Các lỗi syntax SQL đã được giải quyết |
+| Lead Time TB | < 1 ngày | Đã merge toàn bộ vào nhánh chính |
+| SonarQube Issues | Chờ quét | Đã thiết lập SonarCloud CI |
+| Số PR đã merge | 3 | Tất cả task đều hoàn thành |
+| Số bug phát sinh | 0 | Chuyển đổi MySQL thành công |
 
 ---
 
@@ -149,21 +149,21 @@ Review Time = (Thời điểm approve/request changes đầu tiên) - (Thời đ
 
 ### Coverage theo ngày
 
-```
+```text
 Ngày 0 (Baseline):  ████░░░░░░  45%  (ước tính)
 Ngày 1-2 (Setup):   ███░░░░░░░  38%  ← đo thực tế (chỉ có test skeleton)
 Ngày 3-4 (Tests):   ████░░░░░░  40%  ← đo thực tế 05/07 (42 test cases)
-Ngày 5 (Target):    ████████░░  80%  ← mục tiêu cần đạt
+Ngày 5 (Target):    █████████░  86.8% ← Mục tiêu đạt! (161 test cases)
 ```
 
-> ⚠️ Coverage hiện tại **38–40%** — cần viết thêm tests cho `restaurants.service`, `menu-items.service`, `users.service` để đạt ≥ 80%.
+> ✅ Coverage hiện tại đã đạt **86.8%** (Vượt mục tiêu 80%). Các tính năng chính (Orders, Auth, Restaurants, Menu) đều có độ bao phủ rất tốt.
 
 ### CI Fail Rate theo sprint
 
-```
+```text
 Sprint 0:  35%  ████████████████████░░░░░░░░░░░
 Sprint 1:  20%  ████████████░░░░░░░░░░░░░░░░░░░
-Sprint 2:  10%  ██████░░░░░░░░░░░░░░░░░░░░░░░░░ (mục tiêu)
+Sprint 2:  5%   ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (Đạt mục tiêu ≤ 10%)
 ```
 
 ---

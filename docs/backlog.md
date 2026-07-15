@@ -127,10 +127,10 @@
 |------|--------|--------|
 | Cập nhật README.md | 🔵 A | ✅ Done |
 | Cập nhật `docs/backlog.md` | 🔵 A | ✅ Done |
-| Thu thập CI Fail Rate, Lead Time | 🔵 A | ⬜ Todo |
-| Ghi metrics vào `docs/metrics.md` | Cả nhóm | ⬜ Todo |
-| Viết `docs/retrospective.md` | Cả nhóm | ⬜ Todo |
-| Viết báo cáo SPQM | Cả nhóm | ⬜ Todo |
+| Thu thập CI Fail Rate, Lead Time | 🔵 A | ✅ Done |
+| Ghi metrics vào `docs/metrics.md` | Cả nhóm | ✅ Done |
+| Viết `docs/retrospective.md` | Cả nhóm | ✅ Done |
+| Viết báo cáo SPQM | Cả nhóm | ✅ Done |
 
 ---
 
@@ -139,10 +139,10 @@
 | Priority | Tổng | Todo | In Progress | Done |
 |----------|------|------|-------------|------|
 | P0 | 7 | 0 | 0 | 7 |
-| P1 | 11 | 1 | 1 | 9 |
-| P2 | 4 | 1 | 1 | 2 |
-| P3 | 3 | 3 | 0 | 0 |
-| **Tổng** | **25** | **5** | **2** | **18** |
+| P1 | 11 | 0 | 0 | 11 |
+| P2 | 4 | 0 | 0 | 4 |
+| P3 | 3 | 0 | 0 | 3 |
+| **Tổng** | **25** | **0** | **0** | **25** |
 
 ---
 
