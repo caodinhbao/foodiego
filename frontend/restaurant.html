@@ -254,7 +254,7 @@
         <h4>Chuyển khoản thanh toán đơn hàng</h4>
         <p style="color:var(--text-secondary); margin-top:0.5rem;">Số tiền cần thanh toán:</p>
         <div id="bank-amount" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin: 1rem 0;">0 ₫</div>
-        <p style="font-size: 0.85rem; color:var(--text-muted);">Quét mã QR bên trên hoặc nhấn nút bên dưới để mô phỏng chuyển khoản thành công.</p>
+        <p style="font-size: 0.85rem; color:var(--text-muted);">Quét mã QR bên trên. Hệ thống sẽ tự động xác nhận sau 5 giây (mô phỏng chuyển khoản thành công).</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeBankModal()">Hủy</button>
@@ -493,6 +493,14 @@
         document.getElementById('bank-amount').textContent = formatCurrency(finalAmount);
         document.getElementById('bank-qr-code').src = `https://img.vietqr.io/image/vietinbank-032842713-compact2.png?amount=${finalAmount}&addInfo=${encodeURIComponent('Thanh toan don hang')}&accountName=CAO%20DINH%20BAO`;
         document.getElementById('bank-modal').classList.add('open');
+        
+        // Mô phỏng webhook ngân hàng tự động cập nhật sau 5 giây
+        setTimeout(() => {
+          if (document.getElementById('bank-modal').classList.contains('open')) {
+            processBankTransfer();
+          }
+        }, 5000);
+        
         return;
       }
 
