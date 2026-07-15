@@ -117,14 +117,19 @@ routerItem.get('/search', async (req, res, next) => {
           mi.id,
           mi.name,
           mi.description,
-          mi.price,
           mi.is_available,
           r.id AS restaurant_id,
           r.name AS restaurant_name,
-          r.address AS restaurant_address
+          r.address AS restaurant_address,
+          fs.discount_percent,
+          IF(fs.id IS NOT NULL, mi.price, NULL) AS original_price,
+          IF(fs.id IS NOT NULL, ROUND(mi.price * (1 - fs.discount_percent / 100)), mi.price) AS price
         FROM menu_items mi
-        JOIN restaurants r
-          ON r.id = mi.restaurant_id
+        JOIN restaurants r ON r.id = mi.restaurant_id
+        LEFT JOIN flash_sales fs
+          ON fs.menu_item_id = mi.id
+          AND fs.start_time <= NOW()
+          AND fs.end_time >= NOW()
         WHERE mi.name LIKE ?
           AND mi.is_available = 1
           AND r.status = 'active'

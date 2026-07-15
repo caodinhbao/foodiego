@@ -89,16 +89,29 @@ const getMenuByRestaurant = async (restaurantId) => {
   }
 
   const queryText = `
-    SELECT *
-    FROM menu_items
-    WHERE restaurant_id = ?
-      AND is_available = true
-    ORDER BY name ASC
+    SELECT
+      mi.*,
+      fs.discount_percent,
+      IF(fs.id IS NOT NULL, mi.price, NULL) AS original_price,
+      IF(fs.id IS NOT NULL, ROUND(mi.price * (1 - fs.discount_percent / 100)), mi.price) AS effective_price
+    FROM menu_items mi
+    LEFT JOIN flash_sales fs
+      ON fs.menu_item_id = mi.id
+      AND fs.start_time <= NOW()
+      AND fs.end_time >= NOW()
+    WHERE mi.restaurant_id = ?
+      AND mi.is_available = true
+    ORDER BY mi.name ASC
   `;
 
   const result = await db.query(queryText, [restaurantId]);
 
-  return result.rows;
+  return result.rows.map(row => {
+    if (row.original_price) {
+      row.price = row.effective_price;
+    }
+    return row;
+  });
 };
 
 /**
