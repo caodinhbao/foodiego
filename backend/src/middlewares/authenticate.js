@@ -14,7 +14,7 @@ const authenticate = async (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Check if user still exists in DB
     if (process.env.NODE_ENV !== 'test') {
       const db = require('../config/db');

@@ -1,8 +1,7 @@
 FoodieGo - Hệ thống đặt món trực tuyến
 
 1. LINK NỘP BÀI (VIDEO DEMO, BÁO CÁO SPQM, ẢNH MINH CHỨNG):
-- Link Google Drive: [TODO: CHÈN LINK DRIVE CỦA BẠN VÀO ĐÂY]
-(Lưu ý: Bạn hãy bỏ Video <= 5 phút, ảnh Sonar, ảnh Coverage, và báo cáo SPQM vào một folder Drive rồi để link ở đây).
+ https://drive.google.com/drive/folders/1zMA59g3TAXcrbApuT-rlRVBzaXpj8wAx?usp=drive_link
 
 2. THÔNG TIN CƠ SỞ DỮ LIỆU (DATABASE):
 - Hệ quản trị: MySQL (XAMPP / Docker)

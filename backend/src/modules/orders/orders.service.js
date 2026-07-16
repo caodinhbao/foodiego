@@ -112,7 +112,7 @@ const createOrder = async (customerId, data) => {  // Feature 1 + 4 + 6: notes, 
     }
   }
   total_amount = Math.max(0, total_amount - voucherDiscount);
-  
+
   const vat_fee = Math.round(total_amount * 0.1);
   total_amount += vat_fee; // Add VAT to total_amount
 

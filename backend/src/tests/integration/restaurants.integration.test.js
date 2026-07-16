@@ -110,7 +110,7 @@ describe('Restaurants API (Integration)', () => {
       const res = await request(app).get('/api/restaurants/1/orders').set('Authorization', 'Bearer token');
       expect(res.status).toBe(403);
     });
-    
+
     it('should return orders if owner', async () => {
       db.query
         .mockResolvedValueOnce({ rows: [{ owner_id: 5 }] }) // check owner
