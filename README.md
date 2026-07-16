@@ -15,6 +15,24 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
 
 ---
 
+## 🔗 Nộp Bài & Minh Chứng (Dành cho Giảng viên)
+
+- **Video Demo, Báo cáo SPQM**: [TODO: CHÈN LINK GOOGLE DRIVE CỦA BẠN VÀO ĐÂY]
+- **Tài khoản Demo (Pass: `foodiego123`)**: 
+  + Admin: `admin@foodiego.com`
+  + Restaurant Owner: `owner@test.com`
+  + Customer: `customer@test.com`
+
+### 📸 Bằng chứng CI/CD & Quality
+
+> **[TODO]:** Dán ảnh chụp màn hình tab **Actions** (Pass xanh 100%) vào thư mục `docs/images/actions.png`
+> ![GitHub Actions](docs/images/actions.png)
+
+> **[TODO]:** Dán ảnh chụp màn hình terminal sau khi chạy `npm run test:coverage` (đạt >= 80%) vào `docs/images/coverage.png`
+> ![Test Coverage](docs/images/coverage.png)
+
+---
+
 ## 👥 Thành viên nhóm
 
 | Thành viên | Mã số SV | Vai trò chính |
@@ -219,11 +237,19 @@ npm run lint          # ESLint
 
 ---
 
-## 🔄 Order Status Flow
+## 🔄 Order Status Flow (Sơ đồ luồng đặt món)
 
-```
-ORDER → accepted → preparing → delivering → completed
-                                            → cancelled
+```mermaid
+stateDiagram-v2
+    [*] --> pending : Customer tạo đơn hàng
+    pending --> accepted : Nhà hàng xác nhận
+    pending --> cancelled : Nhà hàng từ chối
+    accepted --> preparing : Bắt đầu chuẩn bị món
+    accepted --> cancelled : Khách hàng/Nhà hàng Hủy
+    preparing --> delivering : Bắt đầu giao hàng
+    delivering --> completed : Giao hàng thành công
+    completed --> [*]
+    cancelled --> [*]
 ```
 
 ---
