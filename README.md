@@ -255,6 +255,11 @@ notifications (id, user_id, title, body, is_read, type, reference_id, created_at
 | Lead Time (PR) | ~2 ngày | ≤ 1 ngày |
 | SonarQube Issues | ~30 | ≤ 10 |
 
+### 📸 SonarQube Dashboard Screenshot
+
+> **[TODO]:** Dán ảnh chụp màn hình kết quả SonarQube của bạn vào thư mục `docs/images/sonarqube.png` và hiển thị nó ở đây.
+> ![SonarQube Result](docs/images/sonarqube.png)
+
 ---
 
 ## 📁 Cấu trúc thư mục

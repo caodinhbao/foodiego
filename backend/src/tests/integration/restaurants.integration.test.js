@@ -94,4 +94,32 @@ describe('Restaurants API (Integration)', () => {
       expect(res.body.name).toBe('Phở Đặc Biệt');
     });
   });
+
+  describe('GET /api/restaurants/:id/reviews', () => {
+    it('should return reviews', async () => {
+      db.query.mockResolvedValue({ rows: [{ id: 1, rating: 5, comment: 'Ngon', customer_name: 'Bao' }] });
+      const res = await request(app).get('/api/restaurants/1/reviews');
+      expect(res.status).toBe(200);
+      expect(res.body.reviews).toHaveLength(1);
+    });
+  });
+
+  describe('GET /api/restaurants/:id/orders', () => {
+    it('should return 403 if not owner', async () => {
+      db.query.mockResolvedValue({ rows: [{ owner_id: 99 }] });
+      const res = await request(app).get('/api/restaurants/1/orders').set('Authorization', 'Bearer token');
+      expect(res.status).toBe(403);
+    });
+    
+    it('should return orders if owner', async () => {
+      db.query
+        .mockResolvedValueOnce({ rows: [{ owner_id: 5 }] }) // check owner
+        .mockResolvedValueOnce({ rows: [{ id: 101, status: 'pending' }] }) // get orders
+        .mockResolvedValueOnce({ rows: [] }); // get items for order
+
+      const res = await request(app).get('/api/restaurants/1/orders').set('Authorization', 'Bearer token');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+    });
+  });
 });

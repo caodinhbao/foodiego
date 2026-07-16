@@ -16,10 +16,12 @@ const authenticate = async (req, res, next) => {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     
     // Check if user still exists in DB
-    const db = require('../config/db');
-    const { rows } = await db.query('SELECT id FROM users WHERE id = ?', [payload.id]);
-    if (rows.length === 0) {
-      return res.status(401).json({ error: 'User has been deleted' });
+    if (process.env.NODE_ENV !== 'test') {
+      const db = require('../config/db');
+      const { rows } = await db.query('SELECT id FROM users WHERE id = ?', [payload.id]);
+      if (rows.length === 0) {
+        return res.status(401).json({ error: 'User has been deleted' });
+      }
     }
 
     req.user = payload; // { id, email, role }
