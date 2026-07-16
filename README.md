@@ -23,6 +23,13 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
   + Restaurant Owner: `food@restaurant.com` (Đồ ăn) / `drink@restaurant.com` (Nước uống)
   + Customer: `an.nguyen@gmail.com` / `binh.tran@gmail.com` / `cuong.le@gmail.com`
 
+### 🗄️ Thông tin Cơ sở dữ liệu (Database)
+- **Hệ quản trị**: MySQL (XAMPP / Docker)
+- **Tên Database**: `foodiego_db`
+- **Cách import**:
+  + **Nếu dùng Docker**: Chỉ cần gõ `docker-compose up -d`, hệ thống sẽ tự động khởi tạo database.
+  + **Nếu dùng XAMPP thủ công**: Tạo database tên `foodiego_db` trong phpMyAdmin hoặc Navicat. Sau đó mở file `backend/migrations/002_mysql.sql` và chạy (Run) toàn bộ file đó để khởi tạo bảng và dữ liệu mẫu (mock data).
+
 ### 📸 Bằng chứng CI/CD & Quality
 
 > ** Dán ảnh chụp màn hình tab **Actions** (Pass xanh 100%) vào thư mục `docs/images/actions.png`
