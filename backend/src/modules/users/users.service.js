@@ -28,4 +28,16 @@ const updateUserRole = async (id, role) => {
   return rows[0];
 };
 
-module.exports = { getAllUsers, updateUserRole };
+const deleteUser = async (id) => {
+  const { rows: check } = await db.query('SELECT id FROM users WHERE id = ?', [id]);
+  if (check.length === 0) {
+    const err = new Error('User not found');
+    err.status = 404;
+    throw err;
+  }
+
+  await db.query('DELETE FROM users WHERE id = ?', [id]);
+  return { message: 'Xóa người dùng thành công' };
+};
+
+module.exports = { getAllUsers, updateUserRole, deleteUser };

@@ -24,6 +24,12 @@ async function apiFetch(path, options = {}) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    if (res.status === 401 && path !== '/auth/login') {
+      clearToken();
+      clearUser();
+      window.location.href = 'login.html?msg=deleted';
+      return;
+    }
     const err = new Error(data.error || `HTTP ${res.status}`);
     err.status = res.status;
     err.data = data;
@@ -71,6 +77,7 @@ const ordersAPI = {
 const usersAPI = {
   getAll:     () => apiFetch('/users'),
   updateRole: (id, role) => apiFetch(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  delete:     (id) => apiFetch(`/users/${id}`, { method: 'DELETE' }),
 };
 
 // ── Reviews ────────────────────────────────────────────────────
@@ -199,4 +206,18 @@ function connectOrderNotifications(restaurantId, onNewOrder) {
   evtSource.onerror = () => { /* auto-reconnect */ };
   return evtSource;
 }
+
+// ── Validate Session on Load ────────────────────────────────────────
+async function validateSession() {
+  if (isLoggedIn() && !window.location.pathname.includes('login.html') && !window.location.pathname.includes('register.html')) {
+    try {
+      await authAPI.getProfile();
+    } catch (err) {
+      // apiFetch will handle the 401 and redirect to login
+    }
+  }
+}
+
+// Run validation asynchronously on page load
+validateSession();
 

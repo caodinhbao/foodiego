@@ -112,6 +112,9 @@ const createOrder = async (customerId, data) => {  // Feature 1 + 4 + 6: notes, 
     }
   }
   total_amount = Math.max(0, total_amount - voucherDiscount);
+  
+  const vat_fee = Math.round(total_amount * 0.1);
+  total_amount += vat_fee; // Add VAT to total_amount
 
   // Transaction
   const conn = await db.pool.getConnection();
@@ -119,8 +122,8 @@ const createOrder = async (customerId, data) => {  // Feature 1 + 4 + 6: notes, 
     await conn.beginTransaction();
 
     const [orderResult] = await conn.execute(
-      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, voucher_code, discount_amount, notes, status, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, \'pending\', ?, ?)',
-      [customerId, restaurant_id, total_amount, delivery_fee, validVoucherCode, voucherDiscount, notes || null, payment_method, payment_status]
+      'INSERT INTO orders (customer_id, restaurant_id, total_amount, delivery_fee, vat_fee, voucher_code, discount_amount, notes, status, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, \'pending\', ?, ?)',
+      [customerId, restaurant_id, total_amount, delivery_fee, vat_fee, validVoucherCode, voucherDiscount, notes || null, payment_method, payment_status]
     );
     const orderId = orderResult.insertId;
 

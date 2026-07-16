@@ -247,18 +247,33 @@
         <h3 class="modal-title">🏦 Ngân hàng ảo FoodieBank</h3>
         <button class="modal-close" onclick="closeBankModal()">✕</button>
       </div>
-      <div class="modal-body" style="text-align:center; padding: 2rem 1rem;">
-        <div style="margin-bottom: 1rem;">
-          <img id="bank-qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanFoodieGo" alt="Mã QR Chuyển khoản" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      
+      <div id="bank-step-qr">
+        <div class="modal-body" style="text-align:center; padding: 2rem 1rem;">
+          <div style="margin-bottom: 1rem;">
+            <img id="bank-qr-code" src="" alt="Mã QR Chuyển khoản" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          </div>
+          <h4>Chuyển khoản thanh toán đơn hàng</h4>
+          <p style="color:var(--text-secondary); margin-top:0.5rem;">Số tiền cần thanh toán:</p>
+          <div id="bank-amount" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin: 1rem 0;">0 ₫</div>
+          <p style="font-size: 0.85rem; color:var(--text-muted);">Quét mã QR bên trên. Hệ thống đang chờ nhận tiền...</p>
         </div>
-        <h4>Chuyển khoản thanh toán đơn hàng</h4>
-        <p style="color:var(--text-secondary); margin-top:0.5rem;">Số tiền cần thanh toán:</p>
-        <div id="bank-amount" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin: 1rem 0;">0 ₫</div>
-        <p style="font-size: 0.85rem; color:var(--text-muted);">Quét mã QR bên trên. Hệ thống sẽ tự động xác nhận sau 5 giây (mô phỏng chuyển khoản thành công).</p>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeBankModal()">Hủy</button>
+          <button class="btn btn-primary" id="confirm-bank-btn" onclick="processBankTransfer()">Mô phỏng đã chuyển</button>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeBankModal()">Hủy</button>
-        <button class="btn btn-primary" id="confirm-bank-btn" onclick="processBankTransfer()">✅ Xác nhận chuyển khoản</button>
+
+      <div id="bank-step-success" style="display:none; text-align:center; padding: 2rem 1rem;">
+        <div style="font-size: 3rem; color: #4ade80; margin-bottom: 0.5rem; animation: bounceIn 0.5s;">✅</div>
+        <h3 style="color: #4ade80;">Thanh toán thành công!</h3>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Hệ thống đã nhận được khoản chuyển.</p>
+        
+        <div id="bank-invoice-details" style="margin-top: 1.5rem; background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: left; font-size: 0.85rem; border: 1px solid var(--border);">
+          <!-- Injected by JS -->
+        </div>
+
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 1rem;">Đang tạo đơn hàng, vui lòng đợi...</p>
       </div>
     </div>
   </div>
@@ -413,7 +428,9 @@
       const items  = Object.values(cart);
       const subtotal = items.reduce((s, c) => s + c.item.price * c.qty, 0);
       const discount = appliedVoucher ? appliedVoucher.discount_amount : 0;
-      const final    = Math.max(0, subtotal - discount);
+      const amountAfterDiscount = Math.max(0, subtotal - discount);
+      const vatFee = Math.round(amountAfterDiscount * 0.1);
+      const final    = amountAfterDiscount + vatFee;
 
       document.getElementById('order-summary').innerHTML = `
         <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:1rem;">
@@ -430,6 +447,10 @@
           <div class="d-flex justify-between" style="font-size:0.875rem;">
             <span>Phí giao hàng</span>
             <span>+${formatCurrency(15000)}</span>
+          </div>
+          <div class="d-flex justify-between" style="font-size:0.875rem;">
+            <span>VAT (10%)</span>
+            <span>+${formatCurrency(vatFee)}</span>
           </div>
           ${discount ? `
           <div class="d-flex justify-between" style="font-size:0.875rem;color:#4ade80;">
@@ -485,26 +506,44 @@
 
       const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
       const subtotal = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
-      const total = appliedVoucher ? appliedVoucher.final_amount : subtotal;
-      const finalAmount = total + 15000; // + delivery fee
+      const discount = appliedVoucher ? appliedVoucher.discount_amount : 0;
+      const amountAfterDiscount = Math.max(0, subtotal - discount);
+      const vatFee = Math.round(amountAfterDiscount * 0.1);
+      const finalAmount = amountAfterDiscount + vatFee + 15000; // + delivery fee
 
       if (paymentMethod === 'transfer') {
         closeModal();
+        document.getElementById('bank-step-qr').style.display = 'block';
+        document.getElementById('bank-step-success').style.display = 'none';
+        
         document.getElementById('bank-amount').textContent = formatCurrency(finalAmount);
         document.getElementById('bank-qr-code').src = `https://img.vietqr.io/image/vietinbank-032842713-compact2.png?amount=${finalAmount}&addInfo=${encodeURIComponent('Thanh toan don hang')}&accountName=CAO%20DINH%20BAO`;
+        
+        // Cập nhật chi tiết hóa đơn trong modal
+        document.getElementById('bank-invoice-details').innerHTML = `
+          <div style="font-weight: 700; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">Chi tiết thanh toán:</div>
+          <div class="d-flex justify-between" style="padding: 0.2rem 0;"><span>Tạm tính món ăn:</span> <span>${formatCurrency(subtotal)}</span></div>
+          <div class="d-flex justify-between" style="padding: 0.2rem 0;"><span>Phí giao hàng:</span> <span>+${formatCurrency(15000)}</span></div>
+          <div class="d-flex justify-between" style="padding: 0.2rem 0;"><span>Thuế VAT (10%):</span> <span>+${formatCurrency(vatFee)}</span></div>
+          ${discount ? `<div class="d-flex justify-between" style="padding: 0.2rem 0; color: #4ade80;"><span>Giảm giá:</span> <span>-${formatCurrency(discount)}</span></div>` : ''}
+          <div class="d-flex justify-between" style="font-weight: 700; font-size: 1rem; border-top: 1px solid var(--border); padding-top: 0.5rem; margin-top: 0.5rem; color: var(--accent);">
+            <span>Tổng số tiền:</span> <span>${formatCurrency(finalAmount)}</span>
+          </div>
+        `;
+
         document.getElementById('bank-modal').classList.add('open');
         
-        // Mô phỏng webhook ngân hàng tự động cập nhật sau 5 giây
+        // Mô phỏng webhook ngân hàng tự động cập nhật sau 10 giây
         setTimeout(() => {
-          if (document.getElementById('bank-modal').classList.contains('open')) {
+          if (document.getElementById('bank-modal').classList.contains('open') && document.getElementById('bank-step-qr').style.display !== 'none') {
             processBankTransfer();
           }
-        }, 5000);
+        }, 10000);
         
         return;
       }
 
-      await executeOrder(address, 'cash', 'pending');
+      await executeOrder(address, 'cash', 'pending', vatFee);
     }
 
     function closeBankModal() {
@@ -512,15 +551,15 @@
     }
 
     async function processBankTransfer() {
-      const btn = document.getElementById('confirm-bank-btn');
-      btn.disabled = true;
-      btn.textContent = 'Đang xử lý...';
+      // Hiện màn hình thành công
+      document.getElementById('bank-step-qr').style.display = 'none';
+      document.getElementById('bank-step-success').style.display = 'block';
+
+      // Chờ 1.5s rồi gọi API tạo đơn
       setTimeout(async () => {
         const address = document.getElementById('delivery-address').value.trim();
         await executeOrder(address, 'transfer', 'paid');
-        closeBankModal();
-        btn.disabled = false;
-        btn.textContent = '✅ Xác nhận chuyển khoản';
+        // Không cần đóng modal liền, executeOrder sẽ lo phần redirect
       }, 1500);
     }
 
@@ -534,7 +573,10 @@
         unit_price: item.price,
       }));
       const subtotal = Object.values(cart).reduce((s,c) => s + c.item.price * c.qty, 0);
-      const total = appliedVoucher ? appliedVoucher.final_amount : subtotal;
+      const discount = appliedVoucher ? appliedVoucher.discount_amount : 0;
+      const amountAfterDiscount = Math.max(0, subtotal - discount);
+      const vatFee = Math.round(amountAfterDiscount * 0.1);
+      const total = amountAfterDiscount + vatFee; // Phí giao hàng tính riêng hoặc gộp tùy logic cũ
 
       try {
         await ordersAPI.create({
@@ -543,6 +585,7 @@
           total_amount: total,
           delivery_address: address,
           delivery_fee: 15000,
+          vat_fee: vatFee,
           voucher_code: appliedVoucher?.code || null,
           discount_amount: appliedVoucher?.discount_amount || 0,
           payment_method,

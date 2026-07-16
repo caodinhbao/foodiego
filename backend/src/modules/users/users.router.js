@@ -37,4 +37,18 @@ router.patch('/:id/role', authenticate, authorize('admin'), async (req, res, nex
   }
 });
 
+/**
+ * DELETE /api/users/:id
+ * Chỉ Admin được gọi
+ */
+router.delete('/:id', authenticate, authorize('admin'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await usersService.deleteUser(id);
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

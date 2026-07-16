@@ -278,10 +278,24 @@
                   <span class="price">${formatCurrency(i.unit_price * i.quantity)}</span>
                 </div>`).join('')}
               ${items.length > 3 ? `<div class="order-item-row text-muted">+${items.length-3} món khác...</div>` : ''}
+              <div class="order-item-row" style="font-size:0.8rem; border-top:1px dashed var(--border); padding-top:0.4rem; margin-top:0.4rem;">
+                <span>Phí giao hàng</span>
+                <span class="price">+${formatCurrency(order.delivery_fee || 15000)}</span>
+              </div>
+              ${order.vat_fee ? `
+              <div class="order-item-row" style="font-size:0.8rem;">
+                <span>Thuế VAT (10%)</span>
+                <span class="price">+${formatCurrency(order.vat_fee)}</span>
+              </div>` : ''}
+              ${order.discount_amount ? `
+              <div class="order-item-row" style="font-size:0.8rem;color:#4ade80;">
+                <span>Giảm giá</span>
+                <span class="price">-${formatCurrency(order.discount_amount)}</span>
+              </div>` : ''}
             </div>` : ''}
           <div class="order-footer">
             <div>
-              <div class="order-total-amount">${formatCurrency(order.total_amount)}</div>
+              <div class="order-total-amount">Tổng: ${formatCurrency(order.total_amount + Number(order.delivery_fee || 15000))}</div>
               ${pointsEarned > 0 ? `<div style="font-size:.78rem;color:#fbbf24;margin-top:.2rem;">⭐ +${pointsEarned} điểm tích lũy</div>` : ''}
             </div>
             <div style="display:flex;gap:.5rem;">

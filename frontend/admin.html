@@ -382,7 +382,7 @@
         const me = getUser();
         document.getElementById('users-table-wrap').innerHTML = `
           <table>
-            <thead><tr><th>Người dùng</th><th>Role</th><th>Ngày tạo</th><th>Cập nhật role</th></tr></thead>
+            <thead><tr><th>Người dùng</th><th>Role</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead>
             <tbody>
               ${users.map(u => {
                 const init = u.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
@@ -397,11 +397,14 @@
                   <td><span class="badge badge-${u.role}">${roleLabels[u.role]||u.role}</span></td>
                   <td style="color:var(--text-muted);">${formatDate(u.created_at)}</td>
                   <td>${isMe ? '<span style="font-size:.8rem;color:var(--text-muted);">—</span>' : `
-                    <select class="role-select" onchange="updateRole(${u.id},this.value,this)">
-                      <option value="customer" ${u.role==='customer'?'selected':''}>Khách hàng</option>
-                      <option value="restaurant" ${u.role==='restaurant'?'selected':''}>Nhà hàng</option>
-                      <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
-                    </select>`}</td>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <select class="role-select" onchange="updateRole(${u.id},this.value,this)">
+                        <option value="customer" ${u.role==='customer'?'selected':''}>Khách hàng</option>
+                        <option value="restaurant" ${u.role==='restaurant'?'selected':''}>Nhà hàng</option>
+                        <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                      </select>
+                      <button class="btn btn-ghost btn-sm" style="color: #f87171; padding: 0.3rem 0.6rem;" onclick="deleteUser(${u.id})">🗑️ Xóa</button>
+                    </div>`}</td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -420,6 +423,17 @@
       } catch (err) {
         showToast('Lỗi: ' + err.message, 'error');
         el.disabled = false;
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
+      try {
+        await usersAPI.delete(userId);
+        showToast('✅ Xóa người dùng thành công', 'success');
+        loadUsers();
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
       }
     }
 
