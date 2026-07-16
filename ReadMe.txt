@@ -11,7 +11,7 @@ FoodieGo - Hệ thống đặt món trực tuyến
   + Nếu dùng Docker: Chỉ cần gõ `docker-compose up -d`, hệ thống sẽ tự động khởi tạo database.
   + Nếu dùng XAMPP thủ công: Tạo database tên `foodiego_db` trong phpMyAdmin hoặc Navicat. Sau đó mở file `backend/migrations/002_mysql.sql` và chạy (Run) toàn bộ file đó để khởi tạo bảng và dữ liệu mẫu (mock data).
 
-3. TÀI KHOẢN DEMO ĐÃ CÓ SẴN TRONG DB (Mật khẩu chung: foodiego123):
+3. TÀI KHOẢN DEMO ĐÃ CÓ SẴN TRONG DB (Mật khẩu chung: Password123!):
 - Tài khoản Admin: admin@foodiego.com
-- Tài khoản Chủ nhà hàng (Restaurant): owner@test.com 
-- Tài khoản Khách hàng (Customer): customer@test.com
+- Tài khoản Chủ nhà hàng (Restaurant): food@restaurant.com (Đồ ăn) / drink@restaurant.com (Nước uống)
+- Tài khoản Khách hàng (Customer): an.nguyen@gmail.com / binh.tran@gmail.com / cuong.le@gmail.com
