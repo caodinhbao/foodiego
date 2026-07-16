@@ -25,10 +25,10 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
 
 ### 📸 Bằng chứng CI/CD & Quality
 
-> **[TODO]:** Dán ảnh chụp màn hình tab **Actions** (Pass xanh 100%) vào thư mục `docs/images/actions.png`
+> ** Dán ảnh chụp màn hình tab **Actions** (Pass xanh 100%) vào thư mục `docs/images/actions.png`
 > ![GitHub Actions](docs/images/actions.png)
 
-> **[TODO]:** Dán ảnh chụp màn hình terminal sau khi chạy `npm run test:coverage` (đạt >= 80%) vào `docs/images/coverage.png`
+> ** Dán ảnh chụp màn hình terminal sau khi chạy `npm run test:coverage` (đạt >= 80%) vào `docs/images/coverage.png`
 > ![Test Coverage](docs/images/coverage.png)
 
 ---
@@ -281,10 +281,7 @@ notifications (id, user_id, title, body, is_read, type, reference_id, created_at
 | Lead Time (PR) | ~2 ngày | ≤ 1 ngày |
 | SonarQube Issues | ~30 | ≤ 10 |
 
-### 📸 SonarQube Dashboard Screenshot
 
-> **[TODO]:** Dán ảnh chụp màn hình kết quả SonarQube của bạn vào thư mục `docs/images/sonarqube.png` và hiển thị nó ở đây.
-> ![SonarQube Result](docs/images/sonarqube.png)
 
 ---
 
