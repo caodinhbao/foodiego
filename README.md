@@ -18,10 +18,10 @@ FoodieGo là hệ thống đặt món trực tuyến cho phép:
 ## 🔗 Nộp Bài & Minh Chứng (Dành cho Giảng viên)
 
 - **Video Demo, Báo cáo SPQM**: [Google Drive Link](https://drive.google.com/drive/folders/1zMA59g3TAXcrbApuT-r1RVBzaXpj8wAx?usp=drive_link)
-- **Tài khoản Demo (Pass: `foodiego123`)**: 
+- **Tài khoản Demo (Mật khẩu chung: `Password123!`)**: 
   + Admin: `admin@foodiego.com`
-  + Restaurant Owner: `owner@test.com`
-  + Customer: `customer@test.com`
+  + Restaurant Owner: `food@restaurant.com` (Đồ ăn) / `drink@restaurant.com` (Nước uống)
+  + Customer: `an.nguyen@gmail.com` / `binh.tran@gmail.com` / `cuong.le@gmail.com`
 
 ### 📸 Bằng chứng CI/CD & Quality
 
